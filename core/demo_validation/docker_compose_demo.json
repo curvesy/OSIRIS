@@ -1,0 +1,58 @@
+{
+  "version": "3.8",
+  "services": {
+    "duckdb": {
+      "image": "alpine:latest",
+      "purpose": "Hot memory tier testing",
+      "features": [
+        "VSS extension",
+        "In-memory testing",
+        "Real schemas"
+      ]
+    },
+    "redis": {
+      "image": "redis/redis-stack:7.2.0-v10",
+      "purpose": "Semantic memory tier testing",
+      "features": [
+        "Vector search",
+        "Real indices",
+        "Production config"
+      ]
+    },
+    "minio": {
+      "image": "minio/minio:latest",
+      "purpose": "Cold storage tier testing",
+      "features": [
+        "S3 compatibility",
+        "Real buckets",
+        "Parquet support"
+      ]
+    },
+    "test-runner": {
+      "build": "tests/integration/Dockerfile.test",
+      "purpose": "Test execution environment",
+      "features": [
+        "All dependencies",
+        "Pytest",
+        "Locust",
+        "Great Expectations"
+      ]
+    },
+    "prometheus": {
+      "image": "prom/prometheus:latest",
+      "purpose": "Metrics collection during tests",
+      "features": [
+        "Real metrics",
+        "Performance monitoring",
+        "SLA validation"
+      ]
+    }
+  },
+  "networks": [
+    "test-network"
+  ],
+  "volumes": [
+    "test_data",
+    "test_results"
+  ]
+}

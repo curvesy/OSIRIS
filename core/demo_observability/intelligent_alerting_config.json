@@ -1,0 +1,60 @@
+{
+  "alert_groups": {
+    "critical": {
+      "severity": "page_immediately",
+      "alerts": [
+        "AgentDecisionSLABreach: P95 > 1000ms",
+        "SearchSystemDown: success_rate < 50%",
+        "MemoryExhaustionImminent: usage > 95%",
+        "SystemDegradationPattern: multi-signal correlation"
+      ]
+    },
+    "high": {
+      "severity": "alert_team",
+      "alerts": [
+        "SearchLatencyHigh: P95 > 200ms",
+        "ArchivalPipelineStalled: no success in 2h",
+        "AgentPerformanceDegraded: >30% low confidence",
+        "AnomalyDetectionAlert: AI system triggered"
+      ]
+    },
+    "medium": {
+      "severity": "create_ticket",
+      "alerts": [
+        "ResourceUtilizationHigh: CPU/Memory > 70%/80%",
+        "CostBudgetWarning: approaching $100/hour",
+        "DataQualityDegraded: success_rate < 95%"
+      ]
+    },
+    "low": {
+      "severity": "log_only",
+      "alerts": [
+        "CapacityPlanningAlert: trending toward limits",
+        "PatternDiscoveryRateChanged: 50% change from baseline"
+      ]
+    }
+  },
+  "correlation_rules": {
+    "time_window": "5_minutes",
+    "multi_signal_threshold": 3,
+    "severity_escalation": "auto_escalate_correlated_anomalies"
+  },
+  "notification_channels": {
+    "critical": [
+      "pagerduty",
+      "slack_oncall"
+    ],
+    "high": [
+      "slack_team",
+      "email"
+    ],
+    "medium": [
+      "jira",
+      "slack_alerts"
+    ],
+    "low": [
+      "logs",
+      "metrics"
+    ]
+  }
+}

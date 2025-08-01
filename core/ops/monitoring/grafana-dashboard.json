@@ -1,0 +1,509 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "AURA Intelligence - 2025 Production Observability Cockpit",
+    "description": "Modern observability dashboard with AI-powered insights, multi-agent readiness, and business-impact correlation",
+    "tags": ["aura-intelligence", "ai-ml", "production", "2025"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "query",
+          "query": "label_values(aura_search_duration, environment)",
+          "refresh": 1,
+          "includeAll": false,
+          "multi": false,
+          "current": {
+            "value": "production",
+            "text": "production"
+          }
+        },
+        {
+          "name": "agent_type",
+          "type": "query",
+          "query": "label_values(aura_agent_decision_time, agent_type)",
+          "refresh": 1,
+          "includeAll": true,
+          "multi": true,
+          "current": {
+            "value": "$__all",
+            "text": "All"
+          }
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "🎯 Intelligence Flywheel Health Score",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "(\n  (1 - rate(aura_search_requests{status=\"error\"}[5m]) / rate(aura_search_requests[5m])) * 0.4 +\n  (1 - clamp_max(histogram_quantile(0.95, rate(aura_search_duration_bucket[5m])) / 1000, 1)) * 0.3 +\n  (1 - rate(aura_anomalies_detected_total{severity=\"critical\"}[5m]) / 10) * 0.3\n) * 100",
+            "legendFormat": "Health Score"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "green", "value": 90}
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "justifyMode": "center",
+          "orientation": "horizontal"
+        }
+      },
+      {
+        "id": 2,
+        "title": "🚀 Search Performance - Multi-Tier Latency",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 18, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(aura_search_duration_bucket{environment=\"$environment\"}[5m]))",
+            "legendFormat": "P50 - {{tier}}"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(aura_search_duration_bucket{environment=\"$environment\"}[5m]))",
+            "legendFormat": "P95 - {{tier}}"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(aura_search_duration_bucket{environment=\"$environment\"}[5m]))",
+            "legendFormat": "P99 - {{tier}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "opacity",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "never",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "Latency (ms)",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "line"
+              }
+            },
+            "unit": "ms",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 100},
+                {"color": "red", "value": 500}
+              ]
+            }
+          }
+        },
+        "options": {
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["lastNotNull", "max"]
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "🤖 Agent Decision Intelligence",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(aura_agent_decision_time_count{agent_type=~\"$agent_type\"}[5m])",
+            "legendFormat": "Decisions/sec - {{agent_type}}"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(aura_agent_decision_time_bucket{agent_type=~\"$agent_type\"}[5m]))",
+            "legendFormat": "P95 Latency - {{agent_type}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "gradientMode": "hue"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byRegexp",
+                "options": ".*Latency.*"
+              },
+              "properties": [
+                {
+                  "id": "unit",
+                  "value": "ms"
+                },
+                {
+                  "id": "custom.axisPlacement",
+                  "value": "right"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 4,
+        "title": "🧠 Memory Tier Utilization",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "aura_memory_usage{tier=\"hot\"}",
+            "legendFormat": "Hot Memory (DuckDB)"
+          },
+          {
+            "expr": "aura_memory_usage{tier=\"cold\"}",
+            "legendFormat": "Cold Storage (S3)"
+          },
+          {
+            "expr": "aura_memory_usage{tier=\"semantic\"}",
+            "legendFormat": "Semantic Memory (Redis)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              }
+            },
+            "unit": "bytes"
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "pieType": "donut",
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["value", "percent"]
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "🔥 AI-Powered Anomaly Detection",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "increase(aura_anomalies_detected_total[1h])",
+            "legendFormat": "{{anomaly_type}} - {{severity}}",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 5}
+              ]
+            },
+            "custom": {
+              "align": "auto",
+              "displayMode": "color-background"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "severity"
+              },
+              "properties": [
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-text"
+                },
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "thresholds"
+                  }
+                },
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "steps": [
+                      {"color": "green", "value": null},
+                      {"color": "yellow", "value": "medium"},
+                      {"color": "red", "value": "critical"}
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {
+              "desc": true,
+              "displayName": "Value"
+            }
+          ]
+        },
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "__name__": true,
+                "job": true,
+                "instance": true
+              },
+              "indexByName": {},
+              "renameByName": {
+                "anomaly_type": "Anomaly Type",
+                "severity": "Severity",
+                "metric_name": "Metric",
+                "Value": "Count (1h)"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "📊 Data Pipeline Health",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "rate(aura_archival_jobs{status=\"success\"}[5m])",
+            "legendFormat": "Successful Archival Jobs"
+          },
+          {
+            "expr": "rate(aura_archival_jobs{status=\"error\"}[5m])",
+            "legendFormat": "Failed Archival Jobs"
+          },
+          {
+            "expr": "rate(aura_patterns_discovered_total[5m])",
+            "legendFormat": "Patterns Discovered/min"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 15,
+              "gradientMode": "opacity"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Failed Archival Jobs"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "red"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 7,
+        "title": "💰 Cost-Aware Resource Optimization",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{pod=~\"aura-intelligence.*\"}[5m])) * 100",
+            "legendFormat": "CPU Usage %"
+          },
+          {
+            "expr": "sum(container_memory_usage_bytes{pod=~\"aura-intelligence.*\"}) / sum(container_spec_memory_limit_bytes{pod=~\"aura-intelligence.*\"}) * 100",
+            "legendFormat": "Memory Usage %"
+          },
+          {
+            "expr": "sum(rate(container_network_receive_bytes_total{pod=~\"aura-intelligence.*\"}[5m])) + sum(rate(container_network_transmit_bytes_total{pod=~\"aura-intelligence.*\"}[5m]))",
+            "legendFormat": "Network I/O"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 90}
+              ]
+            },
+            "unit": "percent"
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Network I/O"
+              },
+              "properties": [
+                {
+                  "id": "unit",
+                  "value": "Bps"
+                }
+              ]
+            }
+          ]
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "justifyMode": "center",
+          "orientation": "horizontal"
+        }
+      },
+      {
+        "id": 8,
+        "title": "🔍 Distributed Tracing - Agent Interactions",
+        "type": "traces",
+        "gridPos": {"h": 12, "w": 24, "x": 0, "y": 32},
+        "targets": [
+          {
+            "query": "{service.name=\"aura-intelligence\"} | select(span.ai.operation.name)",
+            "queryType": "tracing"
+          }
+        ],
+        "options": {
+          "showSpanFilters": true,
+          "showTraceId": true,
+          "showSpanId": true
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "changes(aura_build_info[1h]) > 0",
+          "iconColor": "blue",
+          "titleFormat": "Deployment",
+          "textFormat": "New version deployed"
+        },
+        {
+          "name": "Critical Anomalies",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "aura_anomalies_detected_total{severity=\"critical\"} > 0",
+          "iconColor": "red",
+          "titleFormat": "Critical Anomaly",
+          "textFormat": "{{anomaly_type}} detected"
+        }
+      ]
+    },
+    "links": [
+      {
+        "title": "Agent Performance Deep Dive",
+        "url": "/d/aura-agents",
+        "type": "dashboards"
+      },
+      {
+        "title": "Cost Optimization Dashboard",
+        "url": "/d/aura-costs",
+        "type": "dashboards"
+      },
+      {
+        "title": "Incident Response Runbook",
+        "url": "https://docs.aura-intelligence.com/runbooks",
+        "type": "link"
+      }
+    ],
+    "version": 1,
+    "schemaVersion": 39
+  }
+}

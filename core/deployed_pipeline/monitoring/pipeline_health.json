@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-07-25T22:58:46.510201",
+  "archival_job": "healthy",
+  "consolidation_job": "healthy",
+  "data_flow": "operational",
+  "hot_memory": {
+    "status": "healthy",
+    "records": 150
+  },
+  "cold_storage": {
+    "status": "healthy",
+    "archives": 45
+  },
+  "semantic_memory": {
+    "status": "healthy",
+    "patterns": 12
+  },
+  "overall_status": "operational"
+}

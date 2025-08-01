@@ -1,0 +1,37 @@
+{
+  "pipeline_name": "aura-intelligence-data-lifecycle",
+  "version": "1.0.0",
+  "deployment_date": "2025-07-25T22:56:37.647520",
+  "components": {
+    "hot_memory": {
+      "type": "DuckDB",
+      "retention_hours": 24,
+      "max_memory_gb": 8
+    },
+    "cold_storage": {
+      "type": "S3_Compatible",
+      "partitioning": "hive_style",
+      "compression": "snappy"
+    },
+    "semantic_memory": {
+      "type": "Redis_Vector",
+      "similarity_threshold": 0.85,
+      "clustering_algorithm": "HDBSCAN"
+    }
+  },
+  "jobs": {
+    "archival": {
+      "schedule": "hourly",
+      "enabled": true
+    },
+    "consolidation": {
+      "schedule": "daily",
+      "enabled": true
+    },
+    "monitoring": {
+      "schedule": "continuous",
+      "enabled": true
+    }
+  },
+  "status": "operational"
+}

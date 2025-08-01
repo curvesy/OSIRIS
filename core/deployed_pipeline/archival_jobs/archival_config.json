@@ -1,0 +1,7 @@
+{
+  "job_name": "aura-intelligence-archival",
+  "schedule": "0 * * * *",
+  "script_path": "deployed_pipeline/archival_jobs/run_archival.py",
+  "retention_hours": 24,
+  "status": "deployed"
+}

@@ -1,0 +1,42 @@
+{
+  "timestamp": "2025-07-31T03:21:47.817996",
+  "tests": [
+    {
+      "name": "Python Version Check",
+      "status": "passed",
+      "duration": 9.059906005859375e-06
+    },
+    {
+      "name": "Project Structure",
+      "status": "passed",
+      "duration": 0.00010228157043457031
+    },
+    {
+      "name": "Core Modules",
+      "status": "failed",
+      "duration": 0.001603841781616211
+    },
+    {
+      "name": "Configuration Files",
+      "status": "passed",
+      "duration": 0.009735107421875
+    },
+    {
+      "name": "Docker Environment",
+      "status": "error",
+      "error": "[Errno 2] No such file or directory: 'docker-compose'"
+    },
+    {
+      "name": "PyTest Suite",
+      "status": "failed",
+      "duration": 7.197715520858765
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "passed": 3,
+    "failed": 3,
+    "skipped": 0,
+    "success_rate": "50.0%"
+  }
+}

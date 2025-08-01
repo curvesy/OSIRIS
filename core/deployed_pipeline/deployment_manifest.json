@@ -1,0 +1,92 @@
+{
+  "status": "success",
+  "deployment_time": "2025-07-25T22:56:37.647741",
+  "duration_seconds": 0.0011339187622070312,
+  "components": {
+    "archival_jobs": {
+      "job_name": "aura-intelligence-archival",
+      "schedule": "0 * * * *",
+      "script_path": "deployed_pipeline/archival_jobs/run_archival.py",
+      "retention_hours": 24,
+      "status": "deployed"
+    },
+    "consolidation_jobs": {
+      "job_name": "aura-intelligence-consolidation",
+      "schedule": "0 2 * * *",
+      "script_path": "deployed_pipeline/consolidation_jobs/run_consolidation.py",
+      "batch_window_days": 30,
+      "similarity_threshold": 0.85,
+      "status": "deployed"
+    },
+    "monitoring_system": {
+      "monitoring_name": "aura-intelligence-monitoring",
+      "check_interval_minutes": 5,
+      "script_path": "deployed_pipeline/monitoring/monitor_pipeline.py",
+      "alerts_enabled": true,
+      "status": "deployed"
+    },
+    "pipeline_config": {
+      "pipeline_name": "aura-intelligence-data-lifecycle",
+      "version": "1.0.0",
+      "deployment_date": "2025-07-25T22:56:37.647520",
+      "components": {
+        "hot_memory": {
+          "type": "DuckDB",
+          "retention_hours": 24,
+          "max_memory_gb": 8
+        },
+        "cold_storage": {
+          "type": "S3_Compatible",
+          "partitioning": "hive_style",
+          "compression": "snappy"
+        },
+        "semantic_memory": {
+          "type": "Redis_Vector",
+          "similarity_threshold": 0.85,
+          "clustering_algorithm": "HDBSCAN"
+        }
+      },
+      "jobs": {
+        "archival": {
+          "schedule": "hourly",
+          "enabled": true
+        },
+        "consolidation": {
+          "schedule": "daily",
+          "enabled": true
+        },
+        "monitoring": {
+          "schedule": "continuous",
+          "enabled": true
+        }
+      },
+      "status": "operational"
+    },
+    "validation": {
+      "validation_time": "2025-07-25T22:56:37.647721",
+      "checks": [
+        {
+          "component": "archival_job",
+          "status": "deployed"
+        },
+        {
+          "component": "consolidation_job",
+          "status": "deployed"
+        },
+        {
+          "component": "monitoring_system",
+          "status": "deployed"
+        },
+        {
+          "component": "pipeline_config",
+          "status": "deployed"
+        }
+      ],
+      "all_components_deployed": true,
+      "deployment_valid": true,
+      "status": "valid"
+    }
+  },
+  "deployment_path": "deployed_pipeline",
+  "operational_status": "READY"
+}

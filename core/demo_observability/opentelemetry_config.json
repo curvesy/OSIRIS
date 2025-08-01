@@ -1,0 +1,20 @@
+{
+  "service_name": "aura-intelligence",
+  "service_version": "1.0.0",
+  "environment": "production",
+  "otlp_endpoint": "http://otel-collector:4317",
+  "trace_sample_rate": 0.1,
+  "adaptive_sampling": true,
+  "semantic_conventions": {
+    "ai_operation_name": "intelligence_flywheel_search",
+    "ai_model_name": "topological-data-analysis",
+    "ai_system": "intelligence-flywheel"
+  },
+  "custom_metrics": [
+    "aura.search.duration (histogram)",
+    "aura.agent.decision_time (histogram)",
+    "aura.memory.usage (gauge)",
+    "aura.archival.jobs (counter)",
+    "aura.patterns.discovered (counter)"
+  ]
+}

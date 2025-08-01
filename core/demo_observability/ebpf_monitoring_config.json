@@ -1,0 +1,30 @@
+{
+  "grafana_alloy": {
+    "version": "v1.0.0",
+    "deployment_type": "daemonset",
+    "ebpf_features": [
+      "CPU profiling at 100Hz",
+      "Memory allocation tracking",
+      "Network I/O monitoring",
+      "Disk I/O analysis"
+    ]
+  },
+  "adaptive_sampling": {
+    "critical_metrics": "100% sampling",
+    "high_priority": "50% sampling",
+    "medium_priority": "10% sampling",
+    "low_priority": "1% sampling"
+  },
+  "cost_optimization": {
+    "compression": "zstd",
+    "batch_size": 2000,
+    "export_interval": "5s",
+    "cardinality_reduction": true
+  },
+  "target_processes": [
+    "uvicorn (FastAPI)",
+    "python (archival jobs)",
+    "python (consolidation jobs)",
+    "duckdb (hot memory)"
+  ]
+}

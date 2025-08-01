@@ -1,0 +1,68 @@
+{
+  "test_framework": "pytest",
+  "test_categories": {
+    "test_full_data_flow": {
+      "description": "Proves Hot\u2192Cold\u2192Wise pipeline works end-to-end",
+      "steps": [
+        "Ingest 100 signatures into DuckDB hot tier",
+        "Archive old data to MinIO S3 as Parquet",
+        "Consolidate archived data to Redis semantic tier",
+        "Search across all tiers and verify results"
+      ],
+      "assertions": [
+        "All data flows through pipeline",
+        "No data loss during transitions",
+        "Search finds results from all tiers",
+        "Performance meets SLA (<60ms P95)"
+      ]
+    },
+    "test_search_latency_sla": {
+      "description": "Validates search performance under load",
+      "test_data": "10,000 signatures",
+      "test_queries": "100 search requests",
+      "sla_requirements": {
+        "hot_tier_p95": "< 60ms",
+        "semantic_tier_p95": "< 200ms",
+        "hybrid_search_p95": "< 300ms"
+      }
+    },
+    "test_data_consistency": {
+      "description": "Ensures no data corruption through pipeline",
+      "validations": [
+        "Signature integrity maintained",
+        "Metadata consistency preserved",
+        "Timestamp accuracy verified",
+        "Vector dimensions unchanged"
+      ]
+    },
+    "test_pipeline_resilience": {
+      "description": "Validates error handling and recovery",
+      "scenarios": [
+        "Duplicate signature handling",
+        "Malformed data rejection",
+        "Empty database graceful handling",
+        "Service failure recovery"
+      ]
+    }
+  },
+  "pytest_configuration": {
+    "fixtures": [
+      "test_db",
+      "test_redis",
+      "test_s3",
+      "sample_signatures"
+    ],
+    "markers": [
+      "integration",
+      "load",
+      "quality",
+      "slow"
+    ],
+    "reporting": [
+      "HTML",
+      "JSON",
+      "JUnit XML"
+    ],
+    "parallel_execution": true
+  }
+}

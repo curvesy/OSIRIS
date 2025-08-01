@@ -1,0 +1,64 @@
+# Production-Hardened Dependencies for Cutting-Edge Collective Intelligence
+# Phase 1: Hardening & Observability
+
+# Core LangGraph & LangChain (Latest July 2025)
+langgraph>=0.2.0
+langchain-core>=0.3.0
+langchain-anthropic>=0.2.0
+
+# Production Resilience Patterns
+tenacity>=8.5.0          # Retry logic with exponential backoff
+pybreaker>=1.2.0         # Circuit breaker pattern
+asyncio-throttle>=1.0.2  # Rate limiting for external APIs
+
+# Observability & Monitoring
+opentelemetry-api>=1.25.0
+opentelemetry-sdk>=1.25.0
+opentelemetry-instrumentation>=0.46b0
+prometheus-client>=0.20.0
+structlog>=24.1.0        # Structured logging
+
+# Database & Persistence
+psycopg2-binary>=2.9.9   # PostgreSQL adapter for production checkpointing
+sqlalchemy>=2.0.31       # ORM for database operations
+alembic>=1.13.2          # Database migrations
+
+# Memory & Context Management
+langmem>=0.1.0           # Collective memory (when available)
+redis>=5.0.7             # Caching and session storage
+numpy>=1.26.4            # Vector operations for memory similarity
+
+# API & Web Framework
+fastapi>=0.111.0         # REST API framework
+uvicorn>=0.30.1          # ASGI server
+pydantic>=2.8.2          # Data validation and serialization
+
+# Security & Cryptography
+cryptography>=42.0.8     # Cryptographic operations
+python-jose>=3.3.0       # JWT token handling
+passlib>=1.7.4           # Password hashing
+
+# Configuration & Environment
+pydantic-settings>=2.3.4 # Settings management
+python-dotenv>=1.0.1     # Environment variable loading
+
+# Development & Testing
+pytest>=8.2.2           # Testing framework
+pytest-asyncio>=0.23.7  # Async testing support
+pytest-cov>=5.0.0       # Coverage reporting
+black>=24.4.2            # Code formatting
+isort>=5.13.2            # Import sorting
+mypy>=1.10.1             # Type checking
+
+# Production Deployment
+gunicorn>=22.0.0         # WSGI server for production
+docker>=7.1.0            # Container management
+kubernetes>=30.1.0       # Orchestration client
+
+# Monitoring & Alerting
+sentry-sdk>=2.7.1        # Error tracking
+datadog>=0.49.1          # APM and metrics (optional)
+
+# Documentation
+mkdocs>=1.6.0            # Documentation generation
+mkdocs-material>=9.5.27  # Material theme for docs

@@ -1,0 +1,408 @@
+# 🚨 2025-Grade Prometheus Alerting Rules
+#
+# Intelligent alerting system with:
+# - Multi-signal correlation for reduced noise
+# - Business-impact aware severity levels
+# - AI-powered anomaly detection integration
+# - Agent-specific performance monitoring
+# - Cost-aware resource alerting
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: aura-intelligence-alerts
+  namespace: aura-intelligence
+  labels:
+    app: aura-intelligence
+    component: monitoring
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  
+  # ============================================================================
+  # CRITICAL: Business Impact Alerts (Page Immediately)
+  # ============================================================================
+  - name: aura.critical
+    interval: 15s
+    rules:
+    
+    # Agent Decision SLA Breach - Most Critical
+    - alert: AgentDecisionSLABreach
+      expr: |
+        histogram_quantile(0.95,
+          sum(rate(aura_agent_decision_time_bucket[2m])) by (le)
+        ) > 1000  # P95 > 1000ms
+      for: 2m
+      labels:
+        severity: critical
+        team: platform
+        business_impact: high
+        slo: agent-decision-latency
+      annotations:
+        summary: "🚨 CRITICAL: Agent decision P95 latency {{ $value }}ms exceeds 1000ms SLA"
+        description: |
+          The 95th percentile agent decision latency is {{ $value }}ms, exceeding our 1000ms SLA.
+          This directly impacts user experience and agent effectiveness.
+          
+          Current impact:
+          - Agent decisions are taking too long
+          - User experience degraded
+          - Potential cascade failures
+        dashboard_url: "https://grafana.aura-intelligence.com/d/agents/agent-performance"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/agent-decision-latency"
+        alert_id: "AURA-CRIT-001"
+    
+    # Search System Complete Failure
+    - alert: SearchSystemDown
+      expr: |
+        (
+          rate(aura_search_requests_total{status="success"}[5m]) 
+          / 
+          rate(aura_search_requests_total[5m])
+        ) < 0.5  # Success rate < 50%
+        or
+        absent(up{job="search-api"})  # Service completely down
+      for: 1m
+      labels:
+        severity: critical
+        team: platform
+        business_impact: high
+        slo: search-availability
+      annotations:
+        summary: "🚨 CRITICAL: Search system failure - success rate {{ $value | humanizePercentage }}"
+        description: |
+          The search system is experiencing critical failures with success rate below 50%.
+          This means the core Intelligence Flywheel is not functioning.
+          
+          Immediate actions required:
+          1. Check search-api pod status
+          2. Verify DuckDB and Redis connectivity
+          3. Review recent deployments
+          4. Escalate to on-call engineer
+        dashboard_url: "https://grafana.aura-intelligence.com/d/search/search-performance"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/search-system-down"
+        alert_id: "AURA-CRIT-002"
+    
+    # Memory Exhaustion Imminent
+    - alert: MemoryExhaustionImminent
+      expr: |
+        (
+          aura_memory_usage{tier="hot"} 
+          / 
+          (4 * 1024 * 1024 * 1024)  # 4GB limit
+        ) > 0.95  # > 95% usage
+      for: 2m
+      labels:
+        severity: critical
+        team: platform
+        business_impact: high
+        component: hot-memory
+      annotations:
+        summary: "🚨 CRITICAL: Hot memory usage at {{ $value | humanizePercentage }} - OOM imminent"
+        description: |
+          Hot memory (DuckDB) usage is at {{ $value | humanizePercentage }} of the 4GB limit.
+          System will crash within minutes if not addressed immediately.
+          
+          Immediate actions:
+          1. Trigger emergency archival job: kubectl exec -it archival-job -- python emergency_archive.py
+          2. Scale up memory limits if possible
+          3. Restart search-api pods if necessary
+        dashboard_url: "https://grafana.aura-intelligence.com/d/memory/memory-usage"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/memory-exhaustion"
+        alert_id: "AURA-CRIT-003"
+    
+    # Multi-Signal Correlation: Performance + Errors + Resource
+    - alert: SystemDegradationPattern
+      expr: |
+        (
+          # High latency
+          histogram_quantile(0.95, rate(aura_search_duration_bucket[5m])) > 500
+          and
+          # High error rate
+          rate(aura_search_requests_total{status="error"}[5m]) / rate(aura_search_requests_total[5m]) > 0.05
+          and
+          # High resource usage
+          rate(container_cpu_usage_seconds_total{pod=~"search-api.*"}[5m]) > 0.8
+        )
+      for: 3m
+      labels:
+        severity: critical
+        team: platform
+        business_impact: high
+        pattern: multi-signal-degradation
+      annotations:
+        summary: "🚨 CRITICAL: Correlated system degradation detected across multiple signals"
+        description: |
+          Multiple system health indicators are showing degradation simultaneously:
+          - Search latency P95: {{ with query "histogram_quantile(0.95, rate(aura_search_duration_bucket[5m]))" }}{{ . | first | value | humanizeDuration }}{{ end }}
+          - Error rate: {{ with query "rate(aura_search_requests_total{status=\"error\"}[5m]) / rate(aura_search_requests_total[5m])" }}{{ . | first | value | humanizePercentage }}{{ end }}
+          - CPU usage: {{ with query "rate(container_cpu_usage_seconds_total{pod=~\"search-api.*\"}[5m])" }}{{ . | first | value | humanizePercentage }}{{ end }}
+          
+          This pattern indicates a systemic issue requiring immediate investigation.
+        dashboard_url: "https://grafana.aura-intelligence.com/d/overview/system-overview"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/system-degradation"
+        alert_id: "AURA-CRIT-004"
+
+  # ============================================================================
+  # HIGH: Performance and Reliability Alerts
+  # ============================================================================
+  - name: aura.high
+    interval: 30s
+    rules:
+    
+    # Search Latency Degradation
+    - alert: SearchLatencyHigh
+      expr: |
+        histogram_quantile(0.95,
+          sum(rate(aura_search_duration_bucket{tier!="api"}[5m])) by (le, tier)
+        ) > 200  # P95 > 200ms
+      for: 5m
+      labels:
+        severity: high
+        team: platform
+        business_impact: medium
+        component: search
+      annotations:
+        summary: "⚠️ HIGH: Search latency P95 {{ $value }}ms on {{ $labels.tier }} tier"
+        description: |
+          Search latency on {{ $labels.tier }} tier is elevated at {{ $value }}ms P95.
+          While not critical, this may impact user experience.
+          
+          Recommended actions:
+          1. Check {{ $labels.tier }} tier resource utilization
+          2. Review recent query patterns
+          3. Consider scaling up if sustained
+        dashboard_url: "https://grafana.aura-intelligence.com/d/search/search-performance?var-tier={{ $labels.tier }}"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/search-latency"
+        alert_id: "AURA-HIGH-001"
+    
+    # Archival Pipeline Stalled
+    - alert: ArchivalPipelineStalled
+      expr: |
+        increase(aura_archival_jobs_total{status="success"}[2h]) == 0
+        and
+        hour() >= 6 <= 22  # Only during business hours
+      for: 1h
+      labels:
+        severity: high
+        team: platform
+        business_impact: medium
+        component: archival
+      annotations:
+        summary: "⚠️ HIGH: Archival pipeline stalled - no successful jobs in 2 hours"
+        description: |
+          The archival pipeline has not completed any successful jobs in the last 2 hours.
+          This will lead to hot memory exhaustion if not resolved.
+          
+          Investigation steps:
+          1. Check archival job logs: kubectl logs -l app=archival-jobs
+          2. Verify S3 connectivity and permissions
+          3. Check DuckDB export functionality
+          4. Manual archival trigger if needed
+        dashboard_url: "https://grafana.aura-intelligence.com/d/pipeline/data-pipeline"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/archival-stalled"
+        alert_id: "AURA-HIGH-002"
+    
+    # Agent Performance Degradation
+    - alert: AgentPerformanceDegraded
+      expr: |
+        (
+          rate(aura_agent_decisions_total{confidence_bucket="low"}[10m])
+          /
+          rate(aura_agent_decisions_total[10m])
+        ) > 0.3  # > 30% low confidence decisions
+      for: 10m
+      labels:
+        severity: high
+        team: ai-platform
+        business_impact: medium
+        component: agents
+      annotations:
+        summary: "⚠️ HIGH: Agent confidence degraded - {{ $value | humanizePercentage }} low confidence decisions"
+        description: |
+          Agents are producing {{ $value | humanizePercentage }} low confidence decisions,
+          indicating potential model degradation or data quality issues.
+          
+          Investigation steps:
+          1. Review agent decision logs for patterns
+          2. Check input data quality metrics
+          3. Verify model performance metrics
+          4. Consider model retraining if sustained
+        dashboard_url: "https://grafana.aura-intelligence.com/d/agents/agent-performance"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/agent-performance"
+        alert_id: "AURA-HIGH-003"
+    
+    # Anomaly Detection System Alert
+    - alert: AnomalyDetectionAlert
+      expr: |
+        increase(aura_anomalies_detected_total{severity="high"}[15m]) > 3
+        or
+        increase(aura_anomalies_detected_total{severity="critical"}[15m]) > 0
+      for: 1m
+      labels:
+        severity: high
+        team: platform
+        business_impact: medium
+        component: anomaly-detection
+      annotations:
+        summary: "🤖 HIGH: AI anomaly detection triggered - {{ $labels.severity }} anomalies detected"
+        description: |
+          The AI-powered anomaly detection system has identified {{ $labels.severity }} severity anomalies:
+          - Anomaly type: {{ $labels.anomaly_type }}
+          - Affected metric: {{ $labels.metric_name }}
+          
+          This indicates unusual system behavior that requires investigation.
+        dashboard_url: "https://grafana.aura-intelligence.com/d/anomalies/anomaly-detection"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/anomaly-response"
+        alert_id: "AURA-HIGH-004"
+
+  # ============================================================================
+  # MEDIUM: Operational and Capacity Alerts
+  # ============================================================================
+  - name: aura.medium
+    interval: 60s
+    rules:
+    
+    # Resource Utilization Warning
+    - alert: ResourceUtilizationHigh
+      expr: |
+        (
+          rate(container_cpu_usage_seconds_total{pod=~"aura-intelligence.*"}[5m]) > 0.7
+          or
+          container_memory_usage_bytes{pod=~"aura-intelligence.*"} / container_spec_memory_limit_bytes > 0.8
+        )
+      for: 10m
+      labels:
+        severity: medium
+        team: platform
+        business_impact: low
+        component: resources
+      annotations:
+        summary: "📊 MEDIUM: High resource utilization on {{ $labels.pod }}"
+        description: |
+          Pod {{ $labels.pod }} is showing high resource utilization:
+          - CPU: {{ with query "rate(container_cpu_usage_seconds_total{pod=\"" }}{{ $labels.pod }}{{ "\"}[5m])" }}{{ . | first | value | humanizePercentage }}{{ end }}
+          - Memory: {{ with query "container_memory_usage_bytes{pod=\"" }}{{ $labels.pod }}{{ "\"} / container_spec_memory_limit_bytes" }}{{ . | first | value | humanizePercentage }}{{ end }}
+          
+          Consider scaling or optimizing resource usage.
+        dashboard_url: "https://grafana.aura-intelligence.com/d/resources/resource-usage"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/resource-optimization"
+        alert_id: "AURA-MED-001"
+    
+    # Cost Budget Warning
+    - alert: CostBudgetWarning
+      expr: |
+        (
+          sum(keda_scaled_object_current_replicas) * 0.05  # $0.05 per replica per hour
+        ) > 75  # > $75/hour (75% of $100 budget)
+      for: 15m
+      labels:
+        severity: medium
+        team: platform
+        business_impact: low
+        component: cost-optimization
+      annotations:
+        summary: "💰 MEDIUM: Approaching hourly cost budget - ${{ $value }}/hour"
+        description: |
+          Current scaling configuration is approaching the $100/hour budget at ${{ $value }}/hour.
+          
+          Current replica counts:
+          - Search API: {{ with query "keda_scaled_object_current_replicas{scaledObject=\"search-api-scaler\"}" }}{{ . | first | value }}{{ end }}
+          - Archival Jobs: {{ with query "keda_scaled_object_current_replicas{scaledObject=\"archival-jobs-scaler\"}" }}{{ . | first | value }}{{ end }}
+          
+          Consider optimizing resource usage or adjusting scaling policies.
+        dashboard_url: "https://grafana.aura-intelligence.com/d/costs/cost-optimization"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/cost-optimization"
+        alert_id: "AURA-MED-002"
+    
+    # Data Quality Issues
+    - alert: DataQualityDegraded
+      expr: |
+        (
+          rate(aura_search_requests_total{status="success"}[10m])
+          /
+          rate(aura_search_requests_total[10m])
+        ) < 0.95  # Success rate < 95%
+        and
+        (
+          rate(aura_search_requests_total{status="success"}[10m])
+          /
+          rate(aura_search_requests_total[10m])
+        ) >= 0.5  # But > 50% (not critical)
+      for: 10m
+      labels:
+        severity: medium
+        team: platform
+        business_impact: low
+        component: data-quality
+      annotations:
+        summary: "📉 MEDIUM: Search success rate degraded to {{ $value | humanizePercentage }}"
+        description: |
+          Search success rate has dropped to {{ $value | humanizePercentage }}, indicating potential data quality issues.
+          
+          This may be caused by:
+          - Malformed queries
+          - Data corruption
+          - Index inconsistencies
+          
+          Monitor closely and investigate if trend continues.
+        dashboard_url: "https://grafana.aura-intelligence.com/d/quality/data-quality"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/data-quality"
+        alert_id: "AURA-MED-003"
+
+  # ============================================================================
+  # LOW: Informational and Trend Alerts
+  # ============================================================================
+  - name: aura.low
+    interval: 300s  # 5 minute intervals for low priority
+    rules:
+    
+    # Capacity Planning Alert
+    - alert: CapacityPlanningAlert
+      expr: |
+        predict_linear(aura_memory_usage{tier="hot"}[6h], 24*3600) > (3.5 * 1024 * 1024 * 1024)  # Predict > 3.5GB in 24h
+      for: 30m
+      labels:
+        severity: low
+        team: platform
+        business_impact: low
+        component: capacity-planning
+      annotations:
+        summary: "📈 LOW: Hot memory usage trending toward capacity limits"
+        description: |
+          Based on current trends, hot memory usage is predicted to reach 3.5GB within 24 hours.
+          
+          Current usage: {{ with query "aura_memory_usage{tier=\"hot\"}" }}{{ . | first | value | humanize1024 }}{{ end }}
+          Predicted usage (24h): {{ $value | humanize1024 }}
+          
+          Consider proactive capacity planning or archival optimization.
+        dashboard_url: "https://grafana.aura-intelligence.com/d/capacity/capacity-planning"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/capacity-planning"
+        alert_id: "AURA-LOW-001"
+    
+    # Pattern Discovery Rate Change
+    - alert: PatternDiscoveryRateChanged
+      expr: |
+        abs(
+          rate(aura_patterns_discovered_total[1h]) -
+          rate(aura_patterns_discovered_total[1h] offset 24h)
+        ) / rate(aura_patterns_discovered_total[1h] offset 24h) > 0.5  # 50% change from yesterday
+      for: 2h
+      labels:
+        severity: low
+        team: ai-platform
+        business_impact: low
+        component: pattern-discovery
+      annotations:
+        summary: "🔍 LOW: Pattern discovery rate changed significantly from baseline"
+        description: |
+          Pattern discovery rate has changed by {{ $value | humanizePercentage }} compared to the same time yesterday.
+          
+          Current rate: {{ with query "rate(aura_patterns_discovered_total[1h])" }}{{ . | first | value | humanize }}{{ end }}/hour
+          Yesterday rate: {{ with query "rate(aura_patterns_discovered_total[1h] offset 24h)" }}{{ . | first | value | humanize }}{{ end }}/hour
+          
+          This may indicate changes in data patterns or system behavior.
+        dashboard_url: "https://grafana.aura-intelligence.com/d/patterns/pattern-discovery"
+        runbook_url: "https://docs.aura-intelligence.com/runbooks/pattern-analysis"
+        alert_id: "AURA-LOW-002"

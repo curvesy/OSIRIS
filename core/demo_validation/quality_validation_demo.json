@@ -1,0 +1,74 @@
+{
+  "framework": "Great Expectations",
+  "validation_tiers": {
+    "hot_tier_duckdb": {
+      "schema_validations": [
+        "Column existence (id, timestamp, signature, metadata)",
+        "Data types (UUID, TIMESTAMP, BLOB, JSON)",
+        "Null constraints (id, timestamp, signature required)",
+        "Unique constraints (id must be unique)"
+      ],
+      "business_rules": [
+        "Signature length: 768 float32 values (3072 bytes)",
+        "Timestamp range: within last 48 hours",
+        "Partition hour: 0-23 range",
+        "Metadata completeness: > 95%"
+      ],
+      "quality_thresholds": {
+        "null_percentage_max": "1%",
+        "duplicate_percentage_max": "5%",
+        "data_freshness_hours": 48
+      }
+    },
+    "cold_tier_s3": {
+      "format_validations": [
+        "Parquet format compliance",
+        "Schema consistency across files",
+        "Compression ratio > 30%",
+        "Partition size < 100MB"
+      ],
+      "data_integrity": [
+        "No corrupted files",
+        "Complete metadata preservation",
+        "Proper Hive partitioning",
+        "Timestamp ordering maintained"
+      ]
+    },
+    "semantic_tier_redis": {
+      "vector_validations": [
+        "Vector dimension: exactly 768",
+        "Data type: float32",
+        "Value range: normalized vectors",
+        "No NaN or infinite values"
+      ],
+      "metadata_consistency": [
+        "JSON format compliance",
+        "Required fields present",
+        "Timestamp accuracy",
+        "Cluster assignment validity"
+      ]
+    },
+    "cross_tier_integrity": [
+      "Data flow consistency",
+      "No data loss during transitions",
+      "Timestamp synchronization",
+      "Total record count balance"
+    ]
+  },
+  "quality_scoring": {
+    "calculation": "Weighted average of all validation success rates",
+    "passing_threshold": "80% overall quality score",
+    "tier_weights": {
+      "hot_tier": "30%",
+      "cold_tier": "25%",
+      "semantic_tier": "30%",
+      "cross_tier": "15%"
+    }
+  },
+  "reporting": {
+    "validation_results": "Pass/fail status for each expectation",
+    "quality_score": "Overall percentage score",
+    "recommendations": "Actionable improvement suggestions",
+    "trend_analysis": "Quality score over time"
+  }
+}

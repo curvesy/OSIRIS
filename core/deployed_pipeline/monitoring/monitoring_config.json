@@ -1,0 +1,7 @@
+{
+  "monitoring_name": "aura-intelligence-monitoring",
+  "check_interval_minutes": 5,
+  "script_path": "deployed_pipeline/monitoring/monitor_pipeline.py",
+  "alerts_enabled": true,
+  "status": "deployed"
+}

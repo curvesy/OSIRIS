@@ -1,0 +1,41 @@
+{
+  "scaled_objects": {
+    "search_api": {
+      "min_replicas": 2,
+      "max_replicas": 20,
+      "cooldown_period": "60s",
+      "triggers": [
+        "prometheus: search_latency_p95 > 100ms",
+        "prometheus: requests_per_pod > 50/sec",
+        "cpu: utilization > 70%",
+        "memory: utilization > 80%"
+      ]
+    },
+    "archival_jobs": {
+      "min_replicas": 1,
+      "max_replicas": 10,
+      "triggers": [
+        "prometheus: hot_memory_usage > 1GB",
+        "prometheus: archival_failure_rate > 10%"
+      ]
+    },
+    "agent_orchestrator": {
+      "min_replicas": 1,
+      "max_replicas": 8,
+      "triggers": [
+        "redis: agent_decision_queue > 10",
+        "prometheus: agent_decision_latency_p95 > 1000ms"
+      ]
+    }
+  },
+  "cost_optimization": {
+    "max_hourly_cost": "$100",
+    "spot_instance_ratio": "70%",
+    "cost_per_replica": "$0.05/hour",
+    "business_hours_budget": "09:00-17:00 UTC",
+    "override_thresholds": {
+      "critical_latency": "500ms",
+      "error_rate": "5%"
+    }
+  }
+}

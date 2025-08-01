@@ -1,0 +1,42 @@
+{
+  "framework": "Locust",
+  "test_scenarios": {
+    "realistic_agent_behavior": {
+      "hot_tier_searches": "80% of traffic",
+      "semantic_searches": "20% of traffic",
+      "hybrid_searches": "5% of traffic",
+      "health_checks": "1% of traffic"
+    },
+    "load_parameters": {
+      "concurrent_users": 50,
+      "spawn_rate": "5 users/second",
+      "test_duration": "2 minutes",
+      "target_host": "http://test-runner:8000"
+    },
+    "sla_validation": {
+      "hot_tier_latency": "< 60ms P95",
+      "semantic_tier_latency": "< 200ms P95",
+      "hybrid_search_latency": "< 300ms P95",
+      "error_rate": "< 1%",
+      "success_rate": "> 99%"
+    }
+  },
+  "stress_testing": {
+    "burst_requests": "5 requests in quick succession",
+    "aggressive_timing": "0.01-0.1s between requests",
+    "large_payloads": "50 result limit, 0.5 threshold",
+    "edge_cases": "Malformed queries, timeout scenarios"
+  },
+  "metrics_collection": {
+    "response_times": "P50, P95, P99 percentiles",
+    "throughput": "Requests per second",
+    "error_rates": "By endpoint and error type",
+    "resource_usage": "CPU, memory, network I/O"
+  },
+  "reporting": {
+    "real_time_dashboard": "Locust web UI",
+    "html_report": "Comprehensive test results",
+    "csv_metrics": "Raw performance data",
+    "json_summary": "Machine-readable results"
+  }
+}

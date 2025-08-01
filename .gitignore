@@ -1,0 +1,1272 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+#   For a library or package, you might want to ignore these files since the code is
+#   intended to run in multiple environments; otherwise, check them in:
+# .python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# poetry
+#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+#poetry.lock
+
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+#pdm.lock
+#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+#   in version control.
+#   https://pdm.fming.dev/#use-with-ide
+.pdm.toml
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#  be added to the global gitignore or merged into this project gitignore.  For a PyCharm
+#  project, it is recommended to include the following files:
+#  .idea/
+#  *.iml
+#  *.ipr
+#  *.iws
+
+# Project-specific ignores
+# Test environments and temporary directories
+test_env/
+testing_env/
+test_env_fresh/
+clean_env/
+
+# Validation and test results
+validation_results/
+test-results/
+shadow_logs_backup/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+*.log
+logs/
+
+# Configuration files with sensitive data
+config/local_*.json
+config/production_*.json
+config/secrets_*.json
+
+# Docker and container files
+.dockerignore
+
+# Kubernetes manifests (if they contain sensitive data)
+# Uncomment if you want to ignore k8s manifests
+# k8s/
+
+# Monitoring and observability data
+monitoring/data/
+monitoring/logs/
+
+# Deployment artifacts
+deployed_pipeline/logs/
+deployed_pipeline/data/
+
+# Shadow mode and validation artifacts
+shadow_mode_logs.db
+validation_results.json
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js (if any frontend components)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Compiled Python files
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment variables
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Certificate files
+*.pem
+*.key
+*.crt
+
+# Backup files
+*.bak
+*.backup
+
+# Archive files
+*.tar.gz
+*.zip
+*.rar
+
+# Large data files
+*.csv
+*.jsonl
+*.parquet
+*.h5
+*.hdf5
+
+# Model files (if they're large)
+*.pkl
+*.pickle
+*.joblib
+*.model
+
+# Cache directories
+.cache/
+cache/
+
+# Temporary directories
+tmp/
+temp/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Profiling data
+*.prof
+
+# Memory dumps
+*.dump
+
+# Core dumps
+core.*
+
+# Temporary test files
+test_*.py.bak
+*_test_backup.py
+
+# Documentation build
+docs/_build/
+docs/build/
+
+# Sphinx documentation
+docs/_build/
+
+# API documentation
+api_docs/
+
+# Generated documentation
+generated_docs/
+
+# Local development files
+local_*
+dev_*
+development_*
+
+# Production deployment files
+production_*
+deploy_*
+
+# Backup and archive directories
+backup/
+archive/
+old/
+
+# Large binary files
+*.bin
+*.dat
+*.data
+
+# Compressed files
+*.gz
+*.bz2
+*.xz
+
+# Lock files (keep poetry.lock if using poetry)
+# poetry.lock
+# Pipfile.lock
+
+# Local configuration overrides
+local_config.py
+local_settings.py
+
+# Test database files
+test_*.db
+*_test.db
+
+# Performance profiling
+*.prof
+*.lprof
+
+# Memory profiling
+*.mem
+
+# Benchmark results
+benchmark_results/
+*.bench
+
+# Chaos engineering artifacts
+chaos_results/
+chaos_logs/
+
+# Load testing results
+load_test_results/
+*.load
+
+# Integration test artifacts
+integration_test_results/
+e2e_test_results/
+
+# Validation artifacts
+validation_artifacts/
+validation_logs/
+
+# Shadow mode artifacts
+shadow_mode_artifacts/
+shadow_logs/
+
+# Governance artifacts
+governance_logs/
+governance_artifacts/
+
+# Neural network artifacts
+neural_artifacts/
+model_checkpoints/
+
+# TDA (Topological Data Analysis) artifacts
+tda_artifacts/
+tda_results/
+
+# LNN (Liquid Neural Networks) artifacts
+lnn_artifacts/
+lnn_checkpoints/
+
+# Consensus artifacts
+consensus_logs/
+consensus_artifacts/
+
+# Orchestration artifacts
+orchestration_logs/
+workflow_artifacts/
+
+# Resilience testing artifacts
+resilience_logs/
+circuit_breaker_logs/
+
+# Observability artifacts
+observability_logs/
+anomaly_detection_logs/
+
+# Enterprise artifacts
+enterprise_logs/
+enterprise_artifacts/
+
+# Collective intelligence artifacts
+collective_logs/
+collective_artifacts/
+
+# Memory artifacts
+memory_logs/
+memory_artifacts/
+
+# Temporal artifacts
+temporal_logs/
+temporal_artifacts/
+
+# Agent artifacts
+agent_logs/
+agent_artifacts/
+
+# Communication artifacts
+communication_logs/
+transport_logs/
+
+# Adapter artifacts
+adapter_logs/
+adapter_artifacts/
+
+# Processor artifacts
+processor_logs/
+processor_artifacts/
+
+# Handler artifacts
+handler_logs/
+handler_artifacts/
+
+# Connector artifacts
+connector_logs/
+connector_artifacts/
+
+# Atomic artifacts
+atomic_logs/
+atomic_artifacts/
+
+# Aura artifacts
+aura_logs/
+aura_artifacts/
+
+# Intelligence artifacts
+intelligence_logs/
+intelligence_artifacts/
+
+# API artifacts
+api_logs/
+api_artifacts/
+
+# Search artifacts
+search_logs/
+search_artifacts/
+
+# Governance dashboard artifacts
+governance_dashboard_logs/
+dashboard_artifacts/
+
+# Benchmark artifacts
+benchmark_logs/
+benchmark_artifacts/
+
+# Chaos engineering artifacts
+chaos_engineering_logs/
+chaos_artifacts/
+
+# Collective artifacts
+collective_logs/
+collective_artifacts/
+
+# Config artifacts
+config_logs/
+config_artifacts/
+
+# Consensus artifacts
+consensus_logs/
+consensus_artifacts/
+
+# Core artifacts
+core_logs/
+core_artifacts/
+
+# Enterprise artifacts
+enterprise_logs/
+enterprise_artifacts/
+
+# Events artifacts
+events_logs/
+events_artifacts/
+
+# Examples artifacts
+examples_logs/
+examples_artifacts/
+
+# Governance artifacts
+governance_logs/
+governance_artifacts/
+
+# Infrastructure artifacts
+infrastructure_logs/
+infrastructure_artifacts/
+
+# Integration artifacts
+integration_logs/
+integration_artifacts/
+
+# Integrations artifacts
+integrations_logs/
+integrations_artifacts/
+
+# LNN artifacts
+lnn_logs/
+lnn_artifacts/
+
+# Memory artifacts
+memory_logs/
+memory_artifacts/
+
+# Neural artifacts
+neural_logs/
+neural_artifacts/
+
+# Observability artifacts
+observability_logs/
+observability_artifacts/
+
+# Orchestration artifacts
+orchestration_logs/
+orchestration_artifacts/
+
+# Resilience artifacts
+resilience_logs/
+resilience_artifacts/
+
+# TDA artifacts
+tda_logs/
+tda_artifacts/
+
+# Testing artifacts
+testing_logs/
+testing_artifacts/
+
+# Unified brain artifacts
+unified_brain_logs/
+unified_brain_artifacts/
+
+# Utils artifacts
+utils_logs/
+utils_artifacts/
+
+# Workflows artifacts
+workflows_logs/
+workflows_artifacts/
+
+# Main artifacts
+main_logs/
+main_artifacts/
+
+# Source artifacts
+src_logs/
+src_artifacts/
+
+# Common artifacts
+common_logs/
+common_artifacts/
+
+# Intelligence artifacts
+intelligence_logs/
+intelligence_artifacts/
+
+# Aura artifacts
+aura_logs/
+aura_artifacts/
+
+# Atomic artifacts
+atomic_logs/
+atomic_artifacts/
+
+# Base artifacts
+base_logs/
+base_artifacts/
+
+# Component artifacts
+component_logs/
+component_artifacts/
+
+# Exceptions artifacts
+exceptions_logs/
+exceptions_artifacts/
+
+# Connectors artifacts
+connectors_logs/
+connectors_artifacts/
+
+# Handlers artifacts
+handlers_logs/
+handlers_artifacts/
+
+# Processors artifacts
+processors_logs/
+processors_artifacts/
+
+# Config artifacts
+config_logs/
+config_artifacts/
+
+# Feature flags artifacts
+feature_flags_logs/
+feature_flags_artifacts/
+
+# Errors artifacts
+errors_logs/
+errors_artifacts/
+
+# Logging artifacts
+logging_logs/
+logging_artifacts/
+
+# Adapters artifacts
+adapters_logs/
+adapters_artifacts/
+
+# Agents artifacts
+agents_logs/
+agents_artifacts/
+
+# API artifacts
+api_logs/
+api_artifacts/
+
+# Benchmarks artifacts
+benchmarks_logs/
+benchmarks_artifacts/
+
+# Chaos artifacts
+chaos_logs/
+chaos_artifacts/
+
+# Collective artifacts
+collective_logs/
+collective_artifacts/
+
+# Config artifacts
+config_logs/
+config_artifacts/
+
+# Consensus artifacts
+consensus_logs/
+consensus_artifacts/
+
+# Core artifacts
+core_logs/
+core_artifacts/
+
+# Enterprise artifacts
+enterprise_logs/
+enterprise_artifacts/
+
+# Events artifacts
+events_logs/
+events_artifacts/
+
+# Examples artifacts
+examples_logs/
+examples_artifacts/
+
+# Governance artifacts
+governance_logs/
+governance_artifacts/
+
+# Infrastructure artifacts
+infrastructure_logs/
+infrastructure_artifacts/
+
+# Integration artifacts
+integration_logs/
+integration_artifacts/
+
+# Integrations artifacts
+integrations_logs/
+integrations_artifacts/
+
+# LNN artifacts
+lnn_logs/
+lnn_artifacts/
+
+# Memory artifacts
+memory_logs/
+memory_artifacts/
+
+# Neural artifacts
+neural_logs/
+neural_artifacts/
+
+# Observability artifacts
+observability_logs/
+observability_artifacts/
+
+# Orchestration artifacts
+orchestration_logs/
+orchestration_artifacts/
+
+# Resilience artifacts
+resilience_logs/
+resilience_artifacts/
+
+# TDA artifacts
+tda_logs/
+tda_artifacts/
+
+# Testing artifacts
+testing_logs/
+testing_artifacts/
+
+# Unified brain artifacts
+unified_brain_logs/
+unified_brain_artifacts/
+
+# Utils artifacts
+utils_logs/
+utils_artifacts/
+
+# Workflows artifacts
+workflows_logs/
+workflows_artifacts/
+
+# Main artifacts
+main_logs/
+main_artifacts/
+
+# Source artifacts
+src_logs/
+src_artifacts/
+
+# Common artifacts
+common_logs/
+common_artifacts/
+
+# Intelligence artifacts
+intelligence_logs/
+intelligence_artifacts/
+
+# Aura artifacts
+aura_logs/
+aura_artifacts/
+
+# Atomic artifacts
+atomic_logs/
+atomic_artifacts/
+
+# Base artifacts
+base_logs/
+base_artifacts/
+
+# Component artifacts
+component_logs/
+component_artifacts/
+
+# Exceptions artifacts
+exceptions_logs/
+exceptions_artifacts/
+
+# Connectors artifacts
+connectors_logs/
+connectors_artifacts/
+
+# Handlers artifacts
+handlers_logs/
+handlers_artifacts/
+
+# Processors artifacts
+processors_logs/
+processors_artifacts/
+
+# Config artifacts
+config_logs/
+config_artifacts/
+
+# Feature flags artifacts
+feature_flags_logs/
+feature_flags_artifacts/
+
+# Errors artifacts
+errors_logs/
+errors_artifacts/
+
+# Logging artifacts
+logging_logs/
+logging_artifacts/
+
+# Adapters artifacts
+adapters_logs/
+adapters_artifacts/
+
+# Agents artifacts
+agents_logs/
+agents_artifacts/
+
+# API artifacts
+api_logs/
+api_artifacts/
+
+# Benchmarks artifacts
+benchmarks_logs/
+benchmarks_artifacts/
+
+# Chaos artifacts
+chaos_logs/
+chaos_artifacts/
+
+# Collective artifacts
+collective_logs/
+collective_artifacts/
+
+# Config artifacts
+config_logs/
+config_artifacts/
+
+# Consensus artifacts
+consensus_logs/
+consensus_artifacts/
+
+# Core artifacts
+core_logs/
+core_artifacts/
+
+# Enterprise artifacts
+enterprise_logs/
+enterprise_artifacts/
+
+# Events artifacts
+events_logs/
+events_artifacts/
+
+# Examples artifacts
+examples_logs/
+examples_artifacts/
+
+# Governance artifacts
+governance_logs/
+governance_artifacts/
+
+# Infrastructure artifacts
+infrastructure_logs/
+infrastructure_artifacts/
+
+# Integration artifacts
+integration_logs/
+integration_artifacts/
+
+# Integrations artifacts
+integrations_logs/
+integrations_artifacts/
+
+# LNN artifacts
+lnn_logs/
+lnn_artifacts/
+
+# Memory artifacts
+memory_logs/
+memory_artifacts/
+
+# Neural artifacts
+neural_logs/
+neural_artifacts/
+
+# Observability artifacts
+observability_logs/
+observability_artifacts/
+
+# Orchestration artifacts
+orchestration_logs/
+orchestration_artifacts/
+
+# Resilience artifacts
+resilience_logs/
+resilience_artifacts/
+
+# TDA artifacts
+tda_logs/
+tda_artifacts/
+
+# Testing artifacts
+testing_logs/
+testing_artifacts/
+
+# Unified brain artifacts
+unified_brain_logs/
+unified_brain_artifacts/
+
+# Utils artifacts
+utils_logs/
+utils_artifacts/
+
+# Workflows artifacts
+workflows_logs/
+workflows_artifacts/
+
+# Main artifacts
+main_logs/
+main_artifacts/
+
+# Source artifacts
+src_logs/
+src_artifacts/
+
+# Common artifacts
+common_logs/
+common_artifacts/
+
+# Intelligence artifacts
+intelligence_logs/
+intelligence_artifacts/
+
+# Aura artifacts
+aura_logs/
+aura_artifacts/
+
+# Atomic artifacts
+atomic_logs/
+atomic_artifacts/
+
+# Base artifacts
+base_logs/
+base_artifacts/
+
+# Component artifacts
+component_logs/
+component_artifacts/
+
+# Exceptions artifacts
+exceptions_logs/
+exceptions_artifacts/
+
+# Connectors artifacts
+connectors_logs/
+connectors_artifacts/
+
+# Handlers artifacts
+handlers_logs/
+handlers_artifacts/
+
+# Processors artifacts
+processors_logs/
+processors_artifacts/
+
+# Config artifacts
+config_logs/
+config_artifacts/
+
+# Feature flags artifacts
+feature_flags_logs/
+feature_flags_artifacts/
+
+# Errors artifacts
+errors_logs/
+errors_artifacts/
+
+# Logging artifacts
+logging_logs/
+logging_artifacts/
+
+# Adapters artifacts
+adapters_logs/
+adapters_artifacts/
+
+# Agents artifacts
+agents_logs/
+agents_artifacts/
+
+# API artifacts
+api_logs/
+api_artifacts/
+
+# Benchmarks artifacts
+benchmarks_logs/
+benchmarks_artifacts/
+
+# Chaos artifacts
+chaos_logs/
+chaos_artifacts/
+
+# Collective artifacts
+collective_logs/
+collective_artifacts/
+
+# Config artifacts
+config_logs/
+config_artifacts/
+
+# Consensus artifacts
+consensus_logs/
+consensus_artifacts/
+
+# Core artifacts
+core_logs/
+core_artifacts/
+
+# Enterprise artifacts
+enterprise_logs/
+enterprise_artifacts/
+
+# Events artifacts
+events_logs/
+events_artifacts/
+
+# Examples artifacts
+examples_logs/
+examples_artifacts/
+
+# Governance artifacts
+governance_logs/
+governance_artifacts/
+
+# Infrastructure artifacts
+infrastructure_logs/
+infrastructure_artifacts/
+
+# Integration artifacts
+integration_logs/
+integration_artifacts/
+
+# Integrations artifacts
+integrations_logs/
+integrations_artifacts/
+
+# LNN artifacts
+lnn_logs/
+lnn_artifacts/
+
+# Memory artifacts
+memory_logs/
+memory_artifacts/
+
+# Neural artifacts
+neural_logs/
+neural_artifacts/
+
+# Observability artifacts
+observability_logs/
+observability_artifacts/
+
+# Orchestration artifacts
+orchestration_logs/
+orchestration_artifacts/
+
+# Resilience artifacts
+resilience_logs/
+resilience_artifacts/
+
+# TDA artifacts
+tda_logs/
+tda_artifacts/
+
+# Testing artifacts
+testing_logs/
+testing_artifacts/
+
+# Unified brain artifacts
+unified_brain_logs/
+unified_brain_artifacts/
+
+# Utils artifacts
+utils_logs/
+utils_artifacts/
+
+# Workflows artifacts
+workflows_logs/
+workflows_artifacts/
+
+# Main artifacts
+main_logs/
+main_artifacts/
+
+# Source artifacts
+src_logs/
+src_artifacts/
+
+# Common artifacts
+common_logs/
+common_artifacts/
+
+# Intelligence artifacts
+intelligence_logs/
+intelligence_artifacts/
+
+# Aura artifacts
+aura_logs/
+aura_artifacts/
+
+# Atomic artifacts
+atomic_logs/
+atomic_artifacts/
+
+# Base artifacts
+base_logs/
+base_artifacts/
+
+# Component artifacts
+component_logs/
+component_artifacts/
+
+# Exceptions artifacts
+exceptions_logs/
+exceptions_artifacts/
+
+# Connectors artifacts
+connectors_logs/
+connectors_artifacts/
+
+# Handlers artifacts
+handlers_logs/
+handlers_artifacts/
+
+# Processors artifacts
+processors_logs/
+processors_artifacts/
+
+# Config artifacts
+config_logs/
+config_artifacts/
+
+# Feature flags artifacts
+feature_flags_logs/
+feature_flags_artifacts/
+
+# Errors artifacts
+errors_logs/
+errors_artifacts/
+
+# Logging artifacts
+logging_logs/
+logging_artifacts/
+
+# Adapters artifacts
+adapters_logs/
+adapters_artifacts/
+
+# Agents artifacts
+agents_logs/
+agents_artifacts/
+
+# API artifacts
+api_logs/
+api_artifacts/
+
+# Benchmarks artifacts
+benchmarks_logs/
+benchmarks_artifacts/
+
+# Chaos artifacts
+chaos_logs/
+chaos_artifacts/
+
+# Collective artifacts
+collective_logs/
+collective_artifacts/
+
+# Config artifacts
+config_logs/
+config_artifacts/
+
+# Consensus artifacts
+consensus_logs/
+consensus_artifacts/
+
+# Core artifacts
+core_logs/
+core_artifacts/
+
+# Enterprise artifacts
+enterprise_logs/
+enterprise_artifacts/
+
+# Events artifacts
+events_logs/
+events_artifacts/
+
+# Examples artifacts
+examples_logs/
+examples_artifacts/
+
+# Governance artifacts
+governance_logs/
+governance_artifacts/
+
+# Infrastructure artifacts
+infrastructure_logs/
+infrastructure_artifacts/
+
+# Integration artifacts
+integration_logs/
+integration_artifacts/
+
+# Integrations artifacts
+integrations_logs/
+integrations_artifacts/
+
+# LNN artifacts
+lnn_logs/
+lnn_artifacts/
+
+# Memory artifacts
+memory_logs/
+memory_artifacts/
+
+# Neural artifacts
+neural_logs/
+neural_artifacts/
+
+# Observability artifacts
+observability_logs/
+observability_artifacts/
+
+# Orchestration artifacts
+orchestration_logs/
+orchestration_artifacts/
+
+# Resilience artifacts
+resilience_logs/
+resilience_artifacts/
+
+# TDA artifacts
+tda_logs/
+tda_artifacts/
+
+# Testing artifacts
+testing_logs/
+testing_artifacts/
+
+# Unified brain artifacts
+unified_brain_logs/
+unified_brain_artifacts/
+
+# Utils artifacts
+utils_logs/
+utils_artifacts/
+
+# Workflows artifacts
+workflows_logs/
+workflows_artifacts/
+
+# Main artifacts
+main_logs/
+main_artifacts/
+
+# Source artifacts
+src_logs/
+src_artifacts/
+
+# Common ar

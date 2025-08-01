@@ -1,0 +1,257 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: aura-intelligence-archival
+  namespace: aura-intelligence
+  labels:
+    app: aura-intelligence
+    component: archival
+    version: v1.0.0
+spec:
+  # Run every hour at minute 0
+  schedule: "0 * * * *"
+  
+  # Prevent overlapping jobs
+  concurrencyPolicy: Forbid
+  
+  # Keep limited job history to prevent etcd bloat
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  
+  # Job will be considered failed if not completed within 30 minutes
+  startingDeadlineSeconds: 1800
+  
+  jobTemplate:
+    spec:
+      # Retry failed jobs up to 2 times
+      backoffLimit: 2
+      
+      # Clean up completed jobs after 1 hour
+      ttlSecondsAfterFinished: 3600
+      
+      template:
+        metadata:
+          labels:
+            app: aura-intelligence
+            component: archival-worker
+        spec:
+          restartPolicy: Never
+          
+          # Service account with S3 and DuckDB permissions
+          serviceAccountName: aura-intelligence-archival
+          
+          containers:
+          - name: archival-worker
+            image: aura-intelligence:latest
+            imagePullPolicy: Always
+            
+            # Production-grade resource allocation
+            resources:
+              requests:
+                memory: "2Gi"
+                cpu: "1"
+                ephemeral-storage: "5Gi"
+              limits:
+                memory: "4Gi"
+                cpu: "2"
+                ephemeral-storage: "10Gi"
+            
+            # Command to run the archival process
+            command:
+            - python
+            - -c
+            - |
+              import asyncio
+              import sys
+              import os
+              sys.path.append('/app/src')
+              
+              from aura_intelligence.enterprise.mem0_hot.archive import ArchivalManager
+              from aura_intelligence.enterprise.mem0_hot.settings import DuckDBSettings
+              import duckdb
+              
+              async def main():
+                  print("🚀 Starting Kubernetes CronJob archival process...")
+                  
+                  # Initialize DuckDB connection
+                  settings = DuckDBSettings(
+                      db_path=os.getenv('DUCKDB_PATH', '/data/hot_memory.db'),
+                      s3_bucket=os.getenv('S3_BUCKET'),
+                      retention_hours=int(os.getenv('RETENTION_HOURS', '24'))
+                  )
+                  
+                  conn = duckdb.connect(settings.db_path)
+                  
+                  # Initialize archival manager with metrics enabled
+                  archival_manager = ArchivalManager(
+                      conn=conn,
+                      settings=settings,
+                      enable_metrics=True
+                  )
+                  
+                  # Run archival process
+                  result = await archival_manager.archive_old_data()
+                  
+                  # Log results
+                  print(f"📊 Archival completed: {result}")
+                  
+                  # Exit with appropriate code
+                  if result.get('status') == 'success':
+                      print("✅ Archival job completed successfully")
+                      sys.exit(0)
+                  else:
+                      print(f"❌ Archival job failed: {result.get('error', 'Unknown error')}")
+                      sys.exit(1)
+              
+              if __name__ == "__main__":
+                  asyncio.run(main())
+            
+            # Environment variables
+            env:
+            - name: DUCKDB_PATH
+              value: "/data/hot_memory.db"
+            - name: S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: aura-intelligence-secrets
+                  key: s3-bucket
+            - name: RETENTION_HOURS
+              value: "24"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aura-intelligence-secrets
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aura-intelligence-secrets
+                  key: aws-secret-access-key
+            - name: AWS_DEFAULT_REGION
+              value: "us-east-1"
+            
+            # Volume mounts
+            volumeMounts:
+            - name: hot-memory-data
+              mountPath: /data
+            - name: temp-storage
+              mountPath: /tmp
+            
+            # Health checks
+            livenessProbe:
+              exec:
+                command:
+                - python
+                - -c
+                - "import sys; sys.exit(0)"
+              initialDelaySeconds: 30
+              periodSeconds: 60
+              timeoutSeconds: 10
+              failureThreshold: 3
+            
+            # Security context
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 1000
+              runAsGroup: 1000
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities:
+                drop:
+                - ALL
+          
+          # Volumes
+          volumes:
+          - name: hot-memory-data
+            persistentVolumeClaim:
+              claimName: aura-intelligence-hot-memory-pvc
+          - name: temp-storage
+            emptyDir:
+              sizeLimit: 5Gi
+          
+          # Node selection for optimal performance
+          nodeSelector:
+            node-type: compute-optimized
+          
+          # Tolerations for dedicated archival nodes
+          tolerations:
+          - key: "archival-workload"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+
+---
+# Service Account for archival operations
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aura-intelligence-archival
+  namespace: aura-intelligence
+  labels:
+    app: aura-intelligence
+    component: archival
+
+---
+# Role for archival operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: aura-intelligence-archival
+  namespace: aura-intelligence
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list", "watch"]
+
+---
+# Role binding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: aura-intelligence-archival
+  namespace: aura-intelligence
+subjects:
+- kind: ServiceAccount
+  name: aura-intelligence-archival
+  namespace: aura-intelligence
+roleRef:
+  kind: Role
+  name: aura-intelligence-archival
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# PersistentVolumeClaim for hot memory data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: aura-intelligence-hot-memory-pvc
+  namespace: aura-intelligence
+  labels:
+    app: aura-intelligence
+    component: hot-memory
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+
+---
+# Secret for S3 and other credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aura-intelligence-secrets
+  namespace: aura-intelligence
+  labels:
+    app: aura-intelligence
+type: Opaque
+data:
+  # Base64 encoded values (replace with actual values)
+  s3-bucket: YXVyYS1pbnRlbGxpZ2VuY2UtYXJjaGl2ZQ==  # aura-intelligence-archive
+  aws-access-key-id: <BASE64_ENCODED_ACCESS_KEY>
+  aws-secret-access-key: <BASE64_ENCODED_SECRET_KEY>

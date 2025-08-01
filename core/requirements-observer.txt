@@ -1,0 +1,35 @@
+# ObserverAgent Dependencies
+# Production-grade requirements for The Collective's first agent
+
+# Core Framework
+pydantic>=2.5.0
+pydantic[email]>=2.5.0
+
+# Async Support
+asyncio-mqtt>=0.13.0
+aioredis>=2.0.1
+
+# Cryptography
+cryptography>=41.0.0
+pycryptodome>=3.19.0
+
+# Observability & Tracing
+opentelemetry-api>=1.21.0
+opentelemetry-sdk>=1.21.0
+opentelemetry-instrumentation>=0.42b0
+opentelemetry-exporter-otlp>=1.21.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.12.0
+
+# Development
+black>=23.0.0
+isort>=5.12.0
+mypy>=1.7.0
+
+# Optional: TDA Integration (for future phases)
+# scikit-tda>=0.1.0
+# ripser>=0.6.4
+# persim>=0.3.2

@@ -1,0 +1,312 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: aura-intelligence-semantic-consolidation
+  namespace: aura-intelligence
+  labels:
+    app: aura-intelligence
+    component: semantic-consolidation
+    version: v1.0.0
+spec:
+  # Run once every 24 hours at 2 AM
+  schedule: "0 2 * * *"
+  
+  # Prevent overlapping jobs
+  concurrencyPolicy: Forbid
+  
+  # Keep limited job history
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  
+  # Job will be considered failed if not completed within 2 hours
+  startingDeadlineSeconds: 7200
+  
+  jobTemplate:
+    spec:
+      # Retry failed jobs up to 1 time (semantic consolidation is expensive)
+      backoffLimit: 1
+      
+      # Clean up completed jobs after 4 hours
+      ttlSecondsAfterFinished: 14400
+      
+      template:
+        metadata:
+          labels:
+            app: aura-intelligence
+            component: semantic-consolidation-worker
+        spec:
+          restartPolicy: Never
+          
+          # Service account with S3 and Redis permissions
+          serviceAccountName: aura-intelligence-semantic
+          
+          containers:
+          - name: semantic-consolidation-worker
+            image: aura-intelligence:latest
+            imagePullPolicy: Always
+            
+            # Resource allocation for ML workloads
+            resources:
+              requests:
+                memory: "4Gi"
+                cpu: "2"
+                ephemeral-storage: "10Gi"
+              limits:
+                memory: "8Gi"
+                cpu: "4"
+                ephemeral-storage: "20Gi"
+            
+            # Command to run the semantic consolidation process
+            command:
+            - python
+            - -c
+            - |
+              import asyncio
+              import sys
+              import os
+              sys.path.append('/app/src')
+              
+              from aura_intelligence.enterprise.mem0_semantic.consolidation import SemanticConsolidationPipeline
+              from aura_intelligence.enterprise.mem0_semantic.sync import SemanticMemorySync
+              from aura_intelligence.enterprise.mem0_hot.vectorize import SignatureVectorizer
+              
+              async def main():
+                  print("🧠 Starting Kubernetes CronJob semantic consolidation process...")
+                  
+                  # Initialize components
+                  vectorizer = SignatureVectorizer()
+                  redis_url = f"redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', '6379')}/{os.getenv('REDIS_DB', '0')}"
+                  
+                  semantic_memory = SemanticMemorySync(redis_url, vectorizer)
+                  await semantic_memory.initialize()
+                  
+                  # Initialize consolidation pipeline
+                  pipeline = SemanticConsolidationPipeline(
+                      semantic_memory=semantic_memory,
+                      vectorizer=vectorizer,
+                      s3_bucket=os.getenv('S3_BUCKET'),
+                      s3_prefix=os.getenv('S3_PREFIX', 'aura-intelligence/hot-memory-archive'),
+                      similarity_threshold=float(os.getenv('SIMILARITY_THRESHOLD', '0.85')),
+                      batch_window_days=int(os.getenv('BATCH_WINDOW_DAYS', '30'))
+                  )
+                  
+                  # Run consolidation process
+                  result = await pipeline.consolidate_archived_data()
+                  
+                  # Log results
+                  print(f"🧠 Semantic consolidation completed: {result}")
+                  
+                  # Exit with appropriate code
+                  if result.get('status') == 'success':
+                      print("✅ Semantic consolidation job completed successfully")
+                      sys.exit(0)
+                  else:
+                      print(f"❌ Semantic consolidation job failed: {result.get('error', 'Unknown error')}")
+                      sys.exit(1)
+              
+              if __name__ == "__main__":
+                  asyncio.run(main())
+            
+            # Environment variables
+            env:
+            - name: S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: aura-intelligence-secrets
+                  key: s3-bucket
+            - name: S3_PREFIX
+              value: "aura-intelligence/hot-memory-archive"
+            - name: REDIS_HOST
+              value: "aura-intelligence-redis"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_DB
+              value: "0"
+            - name: SIMILARITY_THRESHOLD
+              value: "0.85"
+            - name: BATCH_WINDOW_DAYS
+              value: "30"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aura-intelligence-secrets
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aura-intelligence-secrets
+                  key: aws-secret-access-key
+            - name: AWS_DEFAULT_REGION
+              value: "us-east-1"
+            
+            # Volume mounts
+            volumeMounts:
+            - name: temp-storage
+              mountPath: /tmp
+            - name: model-cache
+              mountPath: /app/models
+            
+            # Health checks
+            livenessProbe:
+              exec:
+                command:
+                - python
+                - -c
+                - "import sys; sys.exit(0)"
+              initialDelaySeconds: 60
+              periodSeconds: 300
+              timeoutSeconds: 30
+              failureThreshold: 2
+            
+            # Security context
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 1000
+              runAsGroup: 1000
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities:
+                drop:
+                - ALL
+          
+          # Volumes
+          volumes:
+          - name: temp-storage
+            emptyDir:
+              sizeLimit: 10Gi
+          - name: model-cache
+            emptyDir:
+              sizeLimit: 2Gi
+          
+          # Node selection for ML workloads
+          nodeSelector:
+            node-type: ml-optimized
+          
+          # Tolerations for ML workload nodes
+          tolerations:
+          - key: "ml-workload"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+
+---
+# Service Account for semantic consolidation operations
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aura-intelligence-semantic
+  namespace: aura-intelligence
+  labels:
+    app: aura-intelligence
+    component: semantic-consolidation
+
+---
+# Role for semantic consolidation operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: aura-intelligence-semantic
+  namespace: aura-intelligence
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list", "watch"]
+
+---
+# Role binding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: aura-intelligence-semantic
+  namespace: aura-intelligence
+subjects:
+- kind: ServiceAccount
+  name: aura-intelligence-semantic
+  namespace: aura-intelligence
+roleRef:
+  kind: Role
+  name: aura-intelligence-semantic
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Redis service for semantic memory
+apiVersion: v1
+kind: Service
+metadata:
+  name: aura-intelligence-redis
+  namespace: aura-intelligence
+  labels:
+    app: aura-intelligence
+    component: redis
+spec:
+  selector:
+    app: aura-intelligence
+    component: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis
+  type: ClusterIP
+
+---
+# Redis deployment with vector search modules
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-intelligence-redis
+  namespace: aura-intelligence
+  labels:
+    app: aura-intelligence
+    component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aura-intelligence
+      component: redis
+  template:
+    metadata:
+      labels:
+        app: aura-intelligence
+        component: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis/redis-stack-server:latest
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: aura-intelligence-redis-pvc
+
+---
+# PersistentVolumeClaim for Redis data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: aura-intelligence-redis-pvc
+  namespace: aura-intelligence
+  labels:
+    app: aura-intelligence
+    component: redis
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: fast-ssd

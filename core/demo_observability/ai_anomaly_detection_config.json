@@ -1,0 +1,43 @@
+{
+  "prophet_models": {
+    "search_latency": {
+      "confidence_interval": 0.95,
+      "changepoint_prior_scale": 0.05,
+      "seasonality_mode": "multiplicative",
+      "daily_seasonality": true,
+      "weekly_seasonality": true
+    },
+    "memory_usage": {
+      "confidence_interval": 0.99,
+      "growth": "linear",
+      "prediction_horizon": "24h"
+    },
+    "agent_decisions": {
+      "confidence_interval": 0.95,
+      "custom_seasonalities": [
+        "hourly",
+        "business_hours"
+      ]
+    }
+  },
+  "anomaly_types": [
+    "performance_degradation",
+    "resource_exhaustion",
+    "error_spike",
+    "pattern_shift",
+    "agent_malfunction",
+    "data_quality"
+  ],
+  "severity_thresholds": {
+    "critical": "immediate_page",
+    "high": "alert_team",
+    "medium": "create_ticket",
+    "low": "log_only"
+  },
+  "business_impact_assessment": {
+    "search_latency_sla": "100ms P95",
+    "agent_decision_sla": "1000ms P95",
+    "error_rate_threshold": "1%",
+    "memory_exhaustion_threshold": "95%"
+  }
+}

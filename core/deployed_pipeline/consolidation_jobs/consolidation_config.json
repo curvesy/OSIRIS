@@ -1,0 +1,8 @@
+{
+  "job_name": "aura-intelligence-consolidation",
+  "schedule": "0 2 * * *",
+  "script_path": "deployed_pipeline/consolidation_jobs/run_consolidation.py",
+  "batch_window_days": 30,
+  "similarity_threshold": 0.85,
+  "status": "deployed"
+}

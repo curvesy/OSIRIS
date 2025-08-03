@@ -78,7 +78,7 @@ class ContextAwareLNN:
         self._context_cache: Dict[str, ContextWindow] = {}
         self._cache_ttl = 300  # 5 minutes
         
-    @resilient(level=ResilienceLevel.CRITICAL)
+    @resilient(criticality=ResilienceLevel.CRITICAL)
     async def context_aware_inference(
         self,
         input_data: torch.Tensor,

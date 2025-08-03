@@ -130,9 +130,12 @@ class EventSchema(BaseModel):
     
     def to_kafka_record(self) -> Dict[str, Any]:
         """Convert to Kafka record format."""
+        # Use model_dump with JSON serialization mode to handle datetime objects
+        value_dict = self.model_dump(mode='json')
+        
         return {
             "key": self.partition_key,
-            "value": self.dict(),
+            "value": value_dict,
             "headers": [
                 ("event_type", self.event_type.value.encode()),
                 ("event_version", self.event_version.encode()),

@@ -31,8 +31,8 @@ class Neo4jConfig:
     """Configuration for Neo4j connection."""
     uri: str = "bolt://localhost:7687"
     username: str = "neo4j"
-    password: str = "password"
-    database: str = "neo4j"
+    password: str = "dev_password"  # Match Docker Compose password
+    database: str = "neo4j"  # Default database in Neo4j 5.x
     
     # Connection pool settings
     max_connection_pool_size: int = 50
@@ -73,11 +73,8 @@ class Neo4jAdapter:
                     auth=(self.config.username, self.config.password),
                     max_connection_pool_size=self.config.max_connection_pool_size,
                     connection_acquisition_timeout=self.config.connection_acquisition_timeout,
-                    connection_timeout=self.config.connection_timeout,
-                    max_retry_time=self.config.max_retry_time,
-                    initial_retry_delay=self.config.initial_retry_delay,
-                    retry_delay_multiplier=self.config.retry_delay_multiplier,
-                    retry_delay_jitter_factor=self.config.retry_delay_jitter_factor
+                    connection_timeout=self.config.connection_timeout
+                    # Note: retry parameters handled by resilience decorator instead
                 )
                 
                 # Verify connectivity
@@ -108,7 +105,7 @@ class Neo4jAdapter:
         ) as session:
             yield session
             
-    @resilient(level=ResilienceLevel.CRITICAL)
+    @resilient(criticality=ResilienceLevel.CRITICAL)
     async def query(
         self,
         cypher: str,
@@ -138,7 +135,7 @@ class Neo4jAdapter:
                                error=str(e))
                     raise
                     
-    @resilient(level=ResilienceLevel.CRITICAL)
+    @resilient(criticality=ResilienceLevel.CRITICAL)
     async def write(
         self,
         cypher: str,

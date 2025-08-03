@@ -66,7 +66,7 @@ class ProducerConfig:
     # Performance settings
     batch_size: int = 16384
     linger_ms: int = 10
-    compression_type: str = "snappy"
+    compression_type: str = "gzip"  # Changed from snappy to gzip (more widely available)
     buffer_memory: int = 33554432  # 32MB
     
     # Transactional settings
@@ -93,8 +93,8 @@ class ProducerConfig:
             "bootstrap_servers": self.bootstrap_servers,
             "client_id": self.client_id,
             "acks": self.acks,
-            "retries": self.retries,
-            "max_in_flight_requests_per_connection": self.max_in_flight_requests,
+            # "retries": self.retries,  # Not supported in AIOKafkaProducer - handled by resilience layer
+            # "max_in_flight_requests_per_connection": self.max_in_flight_requests,  # Not supported in current AIOKafka version
             "compression_type": self.compression_type,
             "enable_idempotence": self.enable_idempotence,
             "security_protocol": self.security_protocol

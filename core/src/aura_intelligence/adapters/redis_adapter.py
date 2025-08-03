@@ -151,7 +151,7 @@ class RedisAdapter:
         else:
             raise ValueError(f"Unknown serialization type: {serialization}")
             
-    @resilient(level=ResilienceLevel.NORMAL)
+    @resilient(criticality=ResilienceLevel.STANDARD)
     async def get(
         self,
         key: str,
@@ -177,7 +177,7 @@ class RedisAdapter:
                            error=str(e))
                 raise
                 
-    @resilient(level=ResilienceLevel.NORMAL)
+    @resilient(criticality=ResilienceLevel.STANDARD)
     async def set(
         self,
         key: str,

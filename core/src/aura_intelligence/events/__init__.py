@@ -52,11 +52,11 @@ from .connectors import (
     CDCConnector
 )
 
-from .registry import (
-    SchemaRegistry,
-    EventSerializer,
-    EventDeserializer
-)
+# from .registry import (
+#     SchemaRegistry,
+#     EventSerializer,
+#     EventDeserializer
+# )  # Temporarily commented out - module not available
 
 __version__ = "1.0.0"
 

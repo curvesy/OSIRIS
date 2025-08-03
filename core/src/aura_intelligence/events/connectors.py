@@ -16,9 +16,9 @@ import json
 
 import structlog
 from opentelemetry import trace, metrics
-import aioredis
+# import aioredis  # Temporarily commented out due to Python 3.13 compatibility issue
 import asyncpg
-from debezium import DebeziumClient
+# from debezium import DebeziumClient  # Temporarily commented out - package not available
 
 from .schemas import EventSchema, AgentEvent, WorkflowEvent, SystemEvent, EventType
 from .producers import EventProducer, ProducerConfig, TransactionalProducer

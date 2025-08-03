@@ -142,7 +142,7 @@ class Mem0Adapter:
             self._initialized = False
             logger.info("Mem0 adapter closed")
             
-    @resilient(level=ResilienceLevel.CRITICAL)
+    @resilient(criticality=ResilienceLevel.CRITICAL)
     async def add_memory(
         self,
         memory: Memory
@@ -184,7 +184,7 @@ class Mem0Adapter:
                            error=str(e))
                 raise
                 
-    @resilient(level=ResilienceLevel.CRITICAL)
+    @resilient(criticality=ResilienceLevel.CRITICAL)
     async def add_memories_batch(
         self,
         memories: List[Memory]
@@ -227,7 +227,7 @@ class Mem0Adapter:
                            error=str(e))
                 raise
                 
-    @resilient(level=ResilienceLevel.CRITICAL)
+    @resilient(criticality=ResilienceLevel.CRITICAL)
     async def search_memories(
         self,
         query: SearchQuery

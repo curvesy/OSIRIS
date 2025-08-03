@@ -383,7 +383,13 @@ class DynamicBulkhead:
                 kafka_servers=config.kafka_servers
             )
         
-        self.event_producer = EventProducer(config.kafka_servers)
+        # Create proper ProducerConfig for EventProducer
+        from ..events.producers import ProducerConfig
+        producer_config = ProducerConfig(
+            bootstrap_servers=config.kafka_servers,
+            client_id=f"bulkhead-{name}"
+        )
+        self.event_producer = EventProducer(producer_config)
         
         # Background tasks
         self._scaling_task: Optional[asyncio.Task] = None
@@ -442,7 +448,7 @@ class DynamicBulkhead:
         start_time = datetime.utcnow()
         try:
             # Update metrics
-            bulkhead_active.add(1, {"bulkhead": self.name})
+            bulkhead_active.set(1, {"bulkhead": self.name})
             
             # Execute operation
             result = await operation(*args, **kwargs)
@@ -457,7 +463,7 @@ class DynamicBulkhead:
         finally:
             # Release resources
             await self._release_resources(request)
-            bulkhead_active.add(-1, {"bulkhead": self.name})
+            bulkhead_active.set(0, {"bulkhead": self.name})
             
             # Publish event
             await self._publish_execution_event(request, start_time)
@@ -610,15 +616,22 @@ class DynamicBulkhead:
         """Publish execution event to Kafka."""
         duration = (datetime.utcnow() - start_time).total_seconds()
         
-        event = {
-            "bulkhead": self.name,
-            "request_id": request.id,
-            "operation": request.operation_name,
-            "priority": request.priority.value,
-            "resources": {k.value: v for k, v in request.resources.items()},
-            "duration_seconds": duration,
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        # Import here to avoid circular imports
+        from aura_intelligence.events.schemas import SystemEvent, EventType
+        
+        event = SystemEvent(
+            event_type=EventType.SYSTEM_METRIC,
+            component="bulkhead",
+            instance_id=self.name,
+            data={
+                "bulkhead": self.name,
+                "request_id": request.id,
+                "operation": request.operation_name,
+                "priority": request.priority.value,
+                "resources": {k.value: v for k, v in request.resources.items()},
+                "duration_seconds": duration
+            }
+        )
         
         await self.event_producer.send_event("bulkhead.executions", event)
     

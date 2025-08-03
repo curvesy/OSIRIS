@@ -139,7 +139,7 @@ class LNNCouncilAgent(AgentBase):
                 # Fall back to legacy processing
                 return await self._legacy_process(task)
                 
-    @resilient(level=ResilienceLevel.CRITICAL)
+    @resilient(criticality=ResilienceLevel.CRITICAL)
     async def _process_with_lnn(self, task: CouncilTask) -> CouncilVote:
         """Process task using LNN inference."""
         # Initialize state

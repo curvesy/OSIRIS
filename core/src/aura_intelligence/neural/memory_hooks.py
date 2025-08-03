@@ -80,7 +80,7 @@ class LNNMemoryHooks:
                 
         logger.info(f"LNN memory hooks stopped. Processed: {self._events_processed}, Failed: {self._events_failed}")
         
-    @resilient(level=ResilienceLevel.STANDARD)
+    @resilient(criticality=ResilienceLevel.STANDARD)
     async def on_inference_complete(self, result: Dict[str, Any]):
         """Index inference results for future retrieval."""
         with tracer.start_as_current_span("on_inference_complete") as span:
@@ -106,7 +106,7 @@ class LNNMemoryHooks:
             
             await self._enqueue_event(event)
             
-    @resilient(level=ResilienceLevel.STANDARD)
+    @resilient(criticality=ResilienceLevel.STANDARD)
     async def on_adaptation(self, adaptation_event: Dict[str, Any]):
         """Track model adaptations for analysis."""
         with tracer.start_as_current_span("on_adaptation") as span:
@@ -131,7 +131,7 @@ class LNNMemoryHooks:
             
             await self._enqueue_event(event)
             
-    @resilient(level=ResilienceLevel.STANDARD)
+    @resilient(criticality=ResilienceLevel.STANDARD)
     async def on_pattern_detected(self, pattern: Dict[str, Any]):
         """Index detected patterns for future similarity search."""
         with tracer.start_as_current_span("on_pattern_detected") as span:

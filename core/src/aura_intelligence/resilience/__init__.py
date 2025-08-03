@@ -17,7 +17,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 import asyncio
 
-from opentelemetry import trace, metrics
+from opentelemetry import trace
+from opentelemetry import metrics as otel_metrics
 
 from .circuit_breaker import (
     AdaptiveCircuitBreaker,
@@ -55,7 +56,7 @@ __version__ = "1.0.0"
 T = TypeVar('T')
 
 tracer = trace.get_tracer(__name__)
-meter = metrics.get_meter(__name__)
+meter = otel_metrics.get_meter(__name__)
 
 
 class ResilienceLevel(Enum):
@@ -114,6 +115,10 @@ class ResilienceContext:
     @property
     def is_critical(self) -> bool:
         return self.criticality == ResilienceLevel.CRITICAL
+    
+    def get(self, key: str, default=None):
+        """Get attribute value like a dictionary for compatibility."""
+        return getattr(self, key, default)
 
 
 class ResilientOperation(Generic[T]):
@@ -158,7 +163,7 @@ class ResilientOperation(Generic[T]):
         if self.config.enable_bulkhead:
             self.bulkhead = DynamicBulkhead(
                 BulkheadConfig(
-                    max_concurrent=self.config.bulkhead_max_concurrent,
+                    max_capacity=self.config.bulkhead_max_concurrent,
                     queue_size=1000,
                     priority_enabled=True
                 )
@@ -228,16 +233,31 @@ class ResilientOperation(Generic[T]):
     def _wrap_with_bulkhead(self, operation):
         """Wrap operation with bulkhead."""
         async def wrapped(*args, **kwargs):
+            # Import ResourceRequest here to avoid circular imports
+            from .bulkhead import ResourceRequest, ResourceType, PriorityLevel
+            
+            # Determine priority
             priority = (
                 PriorityLevel.HIGH 
                 if self.context.is_critical 
                 else PriorityLevel.NORMAL
             )
+            
+            # Create a proper ResourceRequest
+            request = ResourceRequest(
+                id=f"req-{id(operation)}-{hash(str(args))}", 
+                operation_name=operation.__name__,
+                priority=priority,
+                resources={ResourceType.AGENT_SLOT: 1.0}
+            )
+            
+            # Remove any request from kwargs to avoid conflicts
+            kwargs_clean = {k: v for k, v in kwargs.items() if k != 'request'}
             return await self.bulkhead.execute(
                 operation, 
+                request,
                 *args, 
-                priority=priority,
-                **kwargs
+                **kwargs_clean
             )
         return wrapped
     

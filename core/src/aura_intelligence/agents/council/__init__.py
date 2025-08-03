@@ -21,6 +21,14 @@ except ImportError:
     CouncilVote = None
     VoteType = None
 
+# Production LNN Council Agent - graceful import
+try:
+    from .production_lnn_council import ProductionLNNCouncilAgent
+    _production_lnn_available = True
+except ImportError:
+    _production_lnn_available = False
+    ProductionLNNCouncilAgent = None
+
 __all__ = []
 
 # Add LNN council components if available
@@ -31,3 +39,7 @@ if _lnn_council_available:
         "CouncilVote",
         "VoteType"
     ])
+
+# Add production LNN council if available
+if _production_lnn_available:
+    __all__.append("ProductionLNNCouncilAgent")

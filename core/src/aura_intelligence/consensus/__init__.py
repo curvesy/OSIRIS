@@ -35,35 +35,31 @@ from .manager import (
 
 from .raft import (
     RaftConsensus,
-    RaftConfig,
-    RaftNode,
-    LogEntry,
-    RaftElectionWorkflow,
-    RaftReplicationWorkflow
+    RaftConfig
+    # RaftNode, RaftElectionWorkflow, RaftReplicationWorkflow - not implemented yet
 )
+# LogEntry is imported from types above
 
 from .byzantine import (
     ByzantineConsensus,
-    BFTConfig,
-    BFTMessage,
-    HotStuffConsensus,
-    BFTProof
+    BFTConfig
+    # BFTMessage, HotStuffConsensus, BFTProof - not implemented yet
 )
 
-from .multi_raft import (
-    MultiRaftConsensus,
-    MultiRaftConfig,
-    RaftGroup,
-    CrossGroupCoordinator
-)
+# from .multi_raft import (
+#     MultiRaftConsensus,
+#     MultiRaftConfig,
+#     RaftGroup,
+#     CrossGroupCoordinator
+# ) - module not implemented yet
 
-from .validation import (
-    NeuroSymbolicValidator,
-    ValidatorConfig,
-    ValidationResult,
-    CausalInferenceEngine,
-    SymbolicReasoner
-)
+# from .validation import (
+#     NeuroSymbolicValidator,
+#     ValidatorConfig,
+#     ValidationResult,
+#     CausalInferenceEngine,
+#     SymbolicReasoner
+# ) - module not implemented yet
 
 from .workflows import (
     ConsensusWorkflow,
@@ -72,12 +68,33 @@ from .workflows import (
     BFTConsensusWorkflow
 )
 
-from .events import (
-    ConsensusProposalEvent,
-    ConsensusVoteEvent,
-    ConsensusDecisionEvent,
-    ConsensusStreamProcessor
-)
+# from .events import (
+#     ConsensusProposalEvent,
+#     ConsensusVoteEvent,
+#     ConsensusDecisionEvent,
+#     ConsensusStreamProcessor
+# ) - module not implemented yet
+
+# Temporary stubs for missing classes
+class SimpleConsensus:
+    """Stub for SimpleConsensus - to be implemented."""
+    def __init__(self, node_id=None, peers=None, kafka_servers=None, **kwargs):
+        self.node_id = node_id
+        self.peers = peers or []
+        self.kafka_servers = kafka_servers
+        # Accept any other parameters for compatibility
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+    
+    async def decide(self, request):
+        return {"decision": "approved", "confidence": 0.8}
+
+class Decision:
+    """Stub for Decision - to be implemented."""
+    def __init__(self, decision_id, result, confidence=1.0):
+        self.decision_id = decision_id
+        self.result = result
+        self.confidence = confidence
 
 __version__ = "1.0.0"
 

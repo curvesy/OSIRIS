@@ -1,30 +1,9 @@
 """
-AURA Common Atomic Components Library
+Atomic components for AURA Intelligence
 
-A collection of atomic, single-responsibility components that form
-the foundation of the AURA Intelligence platform. Each component:
-- Has a single, clear responsibility
-- Is under 150 lines of code
-- Uses dependency injection
-- Is independently testable
-- Follows strict interface contracts
+Provides base classes and utilities for building atomic, composable components.
 """
 
-from .base.component import AtomicComponent, ComponentMetrics
-from .base.protocols import (
-    ProcessorProtocol,
-    ConnectorProtocol,
-    HandlerProtocol,
-    ConfigProtocol
-)
+from .base import AtomicComponent, ComponentError
 
-__version__ = "1.0.0"
-
-__all__ = [
-    "AtomicComponent",
-    "ComponentMetrics",
-    "ProcessorProtocol",
-    "ConnectorProtocol", 
-    "HandlerProtocol",
-    "ConfigProtocol"
-]
+__all__ = ["AtomicComponent", "ComponentError"]

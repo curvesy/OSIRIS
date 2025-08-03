@@ -22,9 +22,9 @@ from .types import (
 )
 from .raft import RaftConsensus, RaftConfig
 from .byzantine import ByzantineConsensus, BFTConfig
-from .multi_raft import MultiRaftConsensus, MultiRaftConfig
-from .validation import NeuroSymbolicValidator, ValidatorConfig
-from ..events import EventProducer, ProducerConfig, ConsensusDecisionEvent
+# from .multi_raft import MultiRaftConsensus, MultiRaftConfig  # Temporarily commented out - module not available
+# from .validation import NeuroSymbolicValidator, ValidatorConfig  # Temporarily commented out - module not available
+from ..events import EventProducer, ProducerConfig  # ConsensusDecisionEvent not available
 from ..agents.temporal import TemporalClient
 
 logger = structlog.get_logger()
@@ -108,25 +108,26 @@ class ConsensusManager:
         )
         return ByzantineConsensus(bft_config)
     
-    def _init_multi_raft(self, config: ConsensusConfig) -> MultiRaftConsensus:
-        """Initialize Multi-Raft consensus."""
-        multi_raft_config = MultiRaftConfig(
-            groups=[
-                {"name": "agents", "nodes": ["agent-1", "agent-2", "agent-3"]},
-                {"name": "workflows", "nodes": ["workflow-1", "workflow-2", "workflow-3"]},
-                {"name": "resources", "nodes": ["resource-1", "resource-2", "resource-3"]}
-            ]
+    def _init_multi_raft(self, config: ConsensusConfig):
+        """Initialize Multi-Raft consensus - temporarily using RaftConsensus."""
+        # TODO: Implement MultiRaftConsensus when module is available
+        raft_config = RaftConfig(
+            node_id="multi-raft-leader",
+            peers=["agent-1", "agent-2", "agent-3"],
+            election_timeout_ms=5000,
+            heartbeat_interval_ms=1000
         )
-        return MultiRaftConsensus(multi_raft_config)
+        return RaftConsensus(raft_config)
     
-    def _init_validator(self, config: ConsensusConfig) -> NeuroSymbolicValidator:
-        """Initialize neuro-symbolic validator."""
-        validator_config = ValidatorConfig(
-            model_path="models/consensus_validator.pt",
-            confidence_threshold=config.neural_confidence_threshold,
-            rules_path="config/consensus_rules.yaml"
-        )
-        return NeuroSymbolicValidator(validator_config)
+    def _init_validator(self, config: ConsensusConfig):
+        """Initialize neuro-symbolic validator - temporarily using stub."""
+        # TODO: Implement NeuroSymbolicValidator when module is available
+        class StubValidator:
+            def __init__(self, config):
+                self.config = config
+            async def validate(self, decision):
+                return True  # Always validate for now
+        return StubValidator(config)
     
     async def start(self):
         """Start the consensus manager."""

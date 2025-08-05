@@ -1,24 +1,33 @@
-"""
-Base atomic components for AURA Intelligence
-"""
+"""Base classes and protocols for atomic components."""
 
-from .base import AtomicComponent, ComponentMetadata
+from .component import AtomicComponent, ComponentMetrics
+from .protocols import (
+    ProcessorProtocol,
+    ConnectorProtocol,
+    HandlerProtocol,
+    ConfigProtocol
+)
 from .exceptions import (
     ComponentError,
-    ComponentInitializationError,
-    ComponentProcessingError,
-    ComponentCleanupError,
-    ComponentTimeoutError,
-    ComponentValidationError
+    ConfigurationError,
+    ProcessingError,
+    ValidationError
 )
 
 __all__ = [
+    # Base classes
     "AtomicComponent",
-    "ComponentMetadata",
+    "ComponentMetrics",
+    
+    # Protocols
+    "ProcessorProtocol",
+    "ConnectorProtocol",
+    "HandlerProtocol",
+    "ConfigProtocol",
+    
+    # Exceptions
     "ComponentError",
-    "ComponentInitializationError", 
-    "ComponentProcessingError",
-    "ComponentCleanupError",
-    "ComponentTimeoutError",
-    "ComponentValidationError"
+    "ConfigurationError",
+    "ProcessingError",
+    "ValidationError"
 ]

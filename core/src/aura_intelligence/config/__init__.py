@@ -8,8 +8,7 @@ The *Settings classes are the modern implementation, while *Config aliases are p
 for backward compatibility with existing code and tests.
 """
 
-from .base_compat import BaseSettings, EnvironmentType, EnhancementLevel
-from .base import get_config, AURAConfig
+from .base import BaseSettings, EnvironmentType, EnhancementLevel
 from .agent import AgentSettings
 from .memory import MemorySettings
 from .api import APISettings

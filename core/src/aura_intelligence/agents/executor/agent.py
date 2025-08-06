@@ -8,7 +8,7 @@ Built on your proven patterns with enterprise-grade execution.
 
 import logging
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 import sys
@@ -496,7 +496,7 @@ class ExecutorAgent:
     async def _execute_single_action(self, action: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a single action."""
         
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         action_type = action.get("type", "unknown")
         
         try:
@@ -517,7 +517,7 @@ class ExecutorAgent:
                 timeout=self.action_timeout_seconds
             )
             
-            execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
             
             return {
                 "action_type": action_type,
@@ -528,7 +528,7 @@ class ExecutorAgent:
             }
             
         except asyncio.TimeoutError:
-            execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
             return {
                 "action_type": action_type,
                 "success": False,
@@ -537,7 +537,7 @@ class ExecutorAgent:
             }
             
         except Exception as e:
-            execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
             return {
                 "action_type": action_type,
                 "success": False,

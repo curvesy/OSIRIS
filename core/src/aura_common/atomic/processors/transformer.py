@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Callable, Union, TypeVar
 from dataclasses import dataclass, field
 from enum import Enum
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..base import AtomicComponent
 from ..base.exceptions import ProcessingError, ValidationError
@@ -165,11 +165,11 @@ class DataTransformer(AtomicComponent[Any, TransformResult, TransformConfig]):
         lineage = []
         
         # Track start time
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         # Apply each transformation step
         for step in self.config.steps:
-            step_start = datetime.utcnow()
+            step_start = datetime.now(timezone.utc)
             
             # Store pre-transform state for lineage
             if self.config.track_lineage:
@@ -190,7 +190,7 @@ class DataTransformer(AtomicComponent[Any, TransformResult, TransformConfig]):
                 if self.config.track_lineage and lineage:
                     lineage[-1]["output"] = self._safe_repr(current_data)
                     lineage[-1]["duration_ms"] = (
-                        datetime.utcnow() - step_start
+                        datetime.now(timezone.utc) - step_start
                     ).total_seconds() * 1000
                     
             except Exception as e:
@@ -215,7 +215,7 @@ class DataTransformer(AtomicComponent[Any, TransformResult, TransformConfig]):
             "total_steps": len(self.config.steps),
             "steps_applied": len(steps_applied),
             "steps_skipped": len(self.config.steps) - len(steps_applied),
-            "duration_ms": (datetime.utcnow() - start_time).total_seconds() * 1000,
+            "duration_ms": (datetime.now(timezone.utc) - start_time).total_seconds() * 1000,
             "input_type": type(input_data).__name__,
             "output_type": type(current_data).__name__
         }

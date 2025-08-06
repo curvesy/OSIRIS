@@ -53,6 +53,10 @@ from .context_managers import (
     AgentContext,
     LLMUsageContext,
 )
+from .metrics import metrics_collector as MetricsCollector
+from .tracing import TracingContext
+from .layer import ObservabilityLayer
+from .neural_metrics import NeuralMetrics
 
 __all__ = [
     # Configuration
@@ -76,6 +80,12 @@ __all__ = [
     "ObservabilityContext",
     "AgentContext",
     "LLMUsageContext",
+    
+    # Metrics and tracing
+    "MetricsCollector",
+    "TracingContext",
+    "ObservabilityLayer",
+    "NeuralMetrics",
 ]
 
 # Version info

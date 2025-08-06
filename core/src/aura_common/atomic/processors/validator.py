@@ -8,7 +8,7 @@ ensuring data quality and consistency in the processing pipeline.
 from typing import Any, Dict, List, Optional, Union, Callable
 from dataclasses import dataclass, field
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..base import AtomicComponent
 from ..base.exceptions import ValidationError
@@ -134,7 +134,7 @@ class DataValidator(AtomicComponent[Any, ValidationResult, ValidationConfig]):
             "rules_passed": rules_passed,
             "rules_failed": rules_checked - rules_passed,
             "data_type": type(input_data).__name__,
-            "validation_time": datetime.utcnow().isoformat()
+            "validation_time": datetime.now(timezone.utc).isoformat()
         }
         
         return ValidationResult(

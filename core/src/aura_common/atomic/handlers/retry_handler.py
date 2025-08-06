@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import Enum
 import asyncio
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from ..base import AtomicComponent
 from ..base.exceptions import RetryableError, ComponentError
@@ -100,10 +100,10 @@ class RetryHandler(AtomicComponent[Callable[[], Awaitable[T]], RetryResult, Retr
             RetryResult with execution details
         """
         attempts = []
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         for attempt_num in range(1, self.config.max_attempts + 1):
-            attempt_start = datetime.utcnow()
+            attempt_start = datetime.now(timezone.utc)
             
             try:
                 # Execute operation
@@ -119,7 +119,7 @@ class RetryHandler(AtomicComponent[Callable[[], Awaitable[T]], RetryResult, Retr
                 )
                 attempts.append(attempt)
                 
-                total_duration = (datetime.utcnow() - start_time).total_seconds() * 1000
+                total_duration = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                 
                 return RetryResult(
                     success=True,
@@ -142,7 +142,7 @@ class RetryHandler(AtomicComponent[Callable[[], Awaitable[T]], RetryResult, Retr
                     )
                     attempts.append(attempt)
                     
-                    total_duration = (datetime.utcnow() - start_time).total_seconds() * 1000
+                    total_duration = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                     
                     return RetryResult(
                         success=False,
@@ -178,7 +178,7 @@ class RetryHandler(AtomicComponent[Callable[[], Awaitable[T]], RetryResult, Retr
                     await asyncio.sleep(delay_ms / 1000)
         
         # All attempts exhausted
-        total_duration = (datetime.utcnow() - start_time).total_seconds() * 1000
+        total_duration = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
         
         return RetryResult(
             success=False,

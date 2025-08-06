@@ -6,7 +6,7 @@ Defines settings for monitoring, metrics, logging, and tracing.
 
 from typing import List, Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, validator
 
 from .base import BaseSettings
 
@@ -134,16 +134,14 @@ class ObservabilitySettings(BaseSettings):
         description="Profiling interval in seconds"
     )
     
-    @field_validator("log_format")
-    @classmethod
+    @validator("log_format")
     def validate_log_format(cls, v: str) -> str:
         """Validate log format."""
         if v not in {"json", "text"}:
             raise ValueError("Log format must be 'json' or 'text'")
         return v
     
-    @field_validator("tracing_backend")
-    @classmethod
+    @validator("tracing_backend")
     def validate_tracing_backend(cls, v: str) -> str:
         """Validate tracing backend."""
         allowed = {"jaeger", "zipkin", "otlp", "none"}

@@ -5,7 +5,7 @@ Prevents cascading failures in distributed systems.
 
 from typing import TypeVar, Callable, Optional, Any, Union
 from enum import Enum, auto
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
 import asyncio
 from functools import wraps
@@ -121,7 +121,7 @@ class CircuitBreaker:
             self._stats.total_calls += 1
             self._stats.consecutive_successes += 1
             self._stats.consecutive_failures = 0
-            self._stats.last_success_time = datetime.utcnow()
+            self._stats.last_success_time = datetime.now(timezone.utc)
             
             if self._state == CircuitState.HALF_OPEN:
                 if self._stats.consecutive_successes >= self.success_threshold:
@@ -134,7 +134,7 @@ class CircuitBreaker:
             self._stats.total_calls += 1
             self._stats.consecutive_failures += 1
             self._stats.consecutive_successes = 0
-            self._stats.last_failure_time = datetime.utcnow()
+            self._stats.last_failure_time = datetime.now(timezone.utc)
             
             if self._state == CircuitState.CLOSED:
                 if self._stats.consecutive_failures >= self.failure_threshold:
@@ -146,7 +146,7 @@ class CircuitBreaker:
         """Change circuit state."""
         if self._state != new_state:
             self._state = new_state
-            self._stats.state_changes.append((datetime.utcnow(), new_state))
+            self._stats.state_changes.append((datetime.now(timezone.utc), new_state))
             self._last_attempt_time = time.time()
             
             # Log state change

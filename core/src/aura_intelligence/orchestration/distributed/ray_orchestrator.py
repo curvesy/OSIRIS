@@ -22,7 +22,7 @@ TDA Integration:
 from typing import Dict, Any, List, Optional, Union, Callable
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, asdict
 from enum import Enum
 import uuid
@@ -233,7 +233,7 @@ class TDALoadBalancer:
     ):
         """Record routing decision for analysis"""
         routing_record = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "request_id": request.request_id,
             "agent_type": request.agent_type.value,
             "selected_agent": selected_agent,
@@ -254,7 +254,7 @@ class TDALoadBalancer:
             self.agent_metrics[agent_id] = {}
         
         self.agent_metrics[agent_id].update(metrics)
-        self.agent_metrics[agent_id]["last_updated"] = datetime.utcnow().isoformat()
+        self.agent_metrics[agent_id]["last_updated"] = datetime.now(timezone.utc).isoformat()
 
 class AgentEnsembleDeployment:
     """
@@ -328,7 +328,7 @@ class AgentEnsembleDeployment:
         """
         Process agent request with TDA integration
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         request = AgentRequest(**request_data)
         
         if tracer:
@@ -350,7 +350,7 @@ class AgentEnsembleDeployment:
             result = await self._process_with_agent(request, tda_context)
             
             # Calculate execution time
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             
             # Update metrics
             self._update_metrics(execution_time, success=True)
@@ -379,7 +379,7 @@ class AgentEnsembleDeployment:
             return asdict(response)
             
         except Exception as e:
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             self._update_metrics(execution_time, success=False)
             
             error_response = AgentResponse(
@@ -444,7 +444,7 @@ class AgentEnsembleDeployment:
             "request_count": self.request_count,
             "error_rate": self.error_count / max(self.request_count, 1),
             "avg_response_time": self.total_execution_time / max(self.request_count, 1),
-            "last_check": datetime.utcnow().isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat()
         }
 
 class MockAgent:
@@ -474,7 +474,7 @@ class MockAgent:
             "tda_enhanced": input_data.get("tda_context") is not None,
             "processing_metadata": {
                 "input_size": len(str(input_data)),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         }
 
@@ -568,7 +568,7 @@ class RayServeOrchestrator:
                 "config": agent_config,
                 "status": "deployed",
                 "deployment": DeployedAgentEnsemble,
-                "created_at": datetime.utcnow().isoformat()
+                "created_at": datetime.now(timezone.utc).isoformat()
             }
             
             self.deployment_handles[deployment_name] = deployment_handle

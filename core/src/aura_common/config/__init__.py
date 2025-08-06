@@ -7,7 +7,7 @@ from .base import AuraConfig, ConfigSection
 from .loaders import ConfigLoader, EnvConfigLoader, FileConfigLoader
 from .validators import ConfigValidator, validate_config
 from .feature_flags import FeatureFlag, FeatureManager, is_feature_enabled
-from .manager import ConfigManager, get_config
+from .manager import ConfigManager, get_config, get_config_value
 
 __all__ = [
     # Base
@@ -31,4 +31,5 @@ __all__ = [
     # Manager
     "ConfigManager",
     "get_config",
+    "get_config_value",
 ]

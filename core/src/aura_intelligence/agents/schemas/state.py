@@ -12,7 +12,8 @@ The foundation for distributed multi-agent coordination.
 """
 
 from typing import Dict, Any, List, Optional
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
+from dataclasses import dataclass, field
 from pydantic import Field, validator
 
 try:
@@ -27,12 +28,12 @@ try:
     from .decision import DecisionPoint
 except ImportError:
     # Fallback for direct import (testing/isolation)
-    from base import (
+    from .base import (
         ImmutableBaseModel, DateTimeField, utc_now, validate_confidence_score, validate_signature_format
     )
-    from enums import TaskStatus, SignatureAlgorithm
-    from crypto import get_crypto_provider
-    from tracecontext import TraceContextMixin
+    from .enums import TaskStatus, SignatureAlgorithm
+    from .crypto import get_crypto_provider
+    from .tracecontext import TraceContextMixin
     # Skip complex imports for isolation testing
     DossierEntry = None
     ActionRecord = None
@@ -389,7 +390,160 @@ class AgentState(ImmutableBaseModel, TraceContextMixin):
         return f"AgentState[{self.task_type}]({self.to_global_id()}) v{self.state_version} -> {self.status.value}"
 
 
+@dataclass
+class EvidenceContent:
+    """
+    Content structure for evidence entries.
+    """
+    type: str
+    data: Dict[str, Any]
+    source: str
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    confidence: float = 1.0
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            "type": self.type,
+            "data": self.data,
+            "source": self.source,
+            "timestamp": self.timestamp.isoformat(),
+            "confidence": self.confidence,
+            "metadata": self.metadata
+        }
+
+
+class ActionIntent:
+    """
+    Represents an agent's intended action.
+    """
+    def __init__(self, action: str, confidence: float = 1.0, metadata: Optional[Dict[str, Any]] = None):
+        self.action = action
+        self.confidence = confidence
+        self.metadata = metadata or {}
+        
+    def __str__(self):
+        return f"ActionIntent({self.action}, confidence={self.confidence})"
+        
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            "action": self.action,
+            "confidence": self.confidence,
+            "metadata": self.metadata
+        }
+
+
+@dataclass  
+class DecisionOption:
+    """
+    Represents a decision option for agents.
+    """
+    action: str
+    confidence: float
+    pros: List[str] = field(default_factory=list)
+    cons: List[str] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "action": self.action,
+            "confidence": self.confidence,
+            "pros": self.pros,
+            "cons": self.cons,
+            "metadata": self.metadata
+        }
+
+
+@dataclass
+class DecisionCriterion:
+    """
+    Represents a criterion for decision making.
+    """
+    name: str
+    weight: float = 1.0
+    threshold: Optional[float] = None
+    comparator: str = "greater"  # greater, less, equal
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    def evaluate(self, value: float) -> bool:
+        """Evaluate if value meets criterion."""
+        if self.threshold is None:
+            return True
+            
+        if self.comparator == "greater":
+            return value > self.threshold
+        elif self.comparator == "less":
+            return value < self.threshold
+        elif self.comparator == "equal":
+            return abs(value - self.threshold) < 0.001
+        else:
+            return False
+            
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "name": self.name,
+            "weight": self.weight,
+            "threshold": self.threshold,
+            "comparator": self.comparator,
+            "metadata": self.metadata
+        }
+
+
+class EvidenceType:
+    """Types of evidence for agent decisions."""
+    OBSERVATION = "observation"
+    ANALYSIS = "analysis"
+    HISTORICAL = "historical"
+    EXTERNAL = "external"
+    DERIVED = "derived"
+
+
+class ActionType:
+    """Types of actions agents can take."""
+    MONITOR = "monitor"
+    INVESTIGATE = "investigate"
+    ESCALATE = "escalate"
+    EXECUTE = "execute"
+    REPORT = "report"
+    WAIT = "wait"
+
+
+class ActionCategory:
+    """Categories of actions for classification."""
+    PASSIVE = "passive"
+    ACTIVE = "active"
+    REACTIVE = "reactive"
+    PROACTIVE = "proactive"
+    DEFENSIVE = "defensive"
+    CORRECTIVE = "corrective"
+
+
+def get_action_category(action_type: str) -> str:
+    """Get the category for a given action type."""
+    category_mapping = {
+        ActionType.MONITOR: ActionCategory.PASSIVE,
+        ActionType.INVESTIGATE: ActionCategory.ACTIVE,
+        ActionType.ESCALATE: ActionCategory.REACTIVE,
+        ActionType.EXECUTE: ActionCategory.PROACTIVE,
+        ActionType.REPORT: ActionCategory.PASSIVE,
+        ActionType.WAIT: ActionCategory.PASSIVE
+    }
+    return category_mapping.get(action_type, ActionCategory.PASSIVE)
+
+
 # Export public interface
 __all__ = [
-    'AgentState'
+    'AgentState',
+    'EvidenceContent',
+    'ActionIntent',
+    'DecisionOption',
+    'DecisionCriterion',
+    'EvidenceType',
+    'ActionType',
+    'ActionCategory',
+    'get_action_category'
 ]

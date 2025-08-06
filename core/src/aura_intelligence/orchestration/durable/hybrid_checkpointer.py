@@ -21,7 +21,7 @@ TDA Integration:
 from typing import Dict, Any, List, Optional, Union
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, asdict
 from enum import Enum
 import uuid
@@ -171,7 +171,7 @@ class HybridCheckpointManager:
                 })
         
         checkpoint_id = f"hybrid_{workflow_id}_{uuid.uuid4().hex[:8]}"
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         conversation_checkpoint_id = None
         workflow_checkpoint_id = None
@@ -216,7 +216,7 @@ class HybridCheckpointManager:
                 tda_correlation_id=tda_correlation_id,
                 metadata={
                     "workflow_id": workflow_id,
-                    "creation_time": (datetime.utcnow() - start_time).total_seconds(),
+                    "creation_time": (datetime.now(timezone.utc) - start_time).total_seconds(),
                     "tda_optimized": tda_context is not None
                 }
             )
@@ -280,7 +280,7 @@ class HybridCheckpointManager:
             # Create checkpoint metadata
             metadata = {
                 "workflow_id": workflow_id,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "tda_correlation": getattr(tda_context, 'correlation_id', None) if tda_context else None,
                 "checkpoint_type": "conversation"
             }
@@ -322,7 +322,7 @@ class HybridCheckpointManager:
                 "checkpoint_id": checkpoint_id,
                 "workflow_id": workflow_id,
                 "state": workflow_state,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "tda_correlation": getattr(tda_context, 'correlation_id', None) if tda_context else None
             }
             
@@ -357,7 +357,7 @@ class HybridCheckpointManager:
                     "tda.correlation_id": tda_correlation_id or "none"
                 })
         
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         self.checkpoint_metrics["recovery_operations"] += 1
         
         try:
@@ -383,7 +383,7 @@ class HybridCheckpointManager:
             )
             
             # Record recovery metrics
-            recovery_time = (datetime.utcnow() - start_time).total_seconds()
+            recovery_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             recovery_result["recovery_time"] = recovery_time
             recovery_result["recovery_mode"] = effective_recovery_mode.value
             
@@ -402,7 +402,7 @@ class HybridCheckpointManager:
             return recovery_result
             
         except Exception as e:
-            recovery_time = (datetime.utcnow() - start_time).total_seconds()
+            recovery_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             
             # Send recovery failure to TDA
             if self.tda_integration and tda_correlation_id:

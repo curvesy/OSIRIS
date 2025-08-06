@@ -10,7 +10,7 @@ Implements various consumer patterns:
 
 from typing import Dict, Any, Optional, List, Callable, Set, AsyncIterator, Union
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import asyncio
 import json
@@ -231,7 +231,7 @@ class EventConsumer:
                 "kafka.offset": msg.offset
             }
         ) as span:
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
             
             try:
                 # Extract trace context from headers
@@ -262,7 +262,7 @@ class EventConsumer:
                     await self._process_event_transactionally(event, msg)
                 
                 # Record metrics
-                duration = (datetime.utcnow() - start_time).total_seconds() * 1000
+                duration = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                 processing_duration.record(
                     duration,
                     {
@@ -482,7 +482,7 @@ class StreamProcessor(EventProcessor):
                 await asyncio.sleep(self.window_size.total_seconds())
                 
                 # Process completed windows
-                current_time = datetime.utcnow()
+                current_time = datetime.now(timezone.utc)
                 completed_windows = []
                 
                 for window_key, events in self.windows.items():

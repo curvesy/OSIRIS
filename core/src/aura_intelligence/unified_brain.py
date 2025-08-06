@@ -11,7 +11,7 @@ This module implements the unified brain that integrates:
 
 import asyncio
 from typing import Dict, List, Optional, Any, AsyncIterator
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass
 import numpy as np
 from pydantic import BaseModel, Field
@@ -228,7 +228,7 @@ class UnifiedAURABrain:
             "patterns": patterns,
             "vector_context": vector_context,
             "cloud_context": cloud_context,
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         }
     
     async def _make_collective_decision(
@@ -304,7 +304,7 @@ class UnifiedAURABrain:
                 "input_data": data,
                 "decision": decision.dict() if hasattr(decision, 'dict') else str(decision),
                 "execution_plan": execution_plan,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         )
         
@@ -350,7 +350,7 @@ class UnifiedAURABrain:
                 "event_store": health_checks[5]
             },
             "metrics": await self.observability.collect_neural_metrics(),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     
     async def replay_decisions(
@@ -407,7 +407,7 @@ async def main():
         "features": np.random.randn(100, 3),  # 100 3D points
         "severity": "high",
         "source": "production_cluster",
-        "timestamp": datetime.utcnow()
+        "timestamp": datetime.now(timezone.utc)
     }
     
     # Analyze and act

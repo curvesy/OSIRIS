@@ -6,7 +6,7 @@ memory system for future retrieval and analysis.
 """
 
 from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 import logging
 from dataclasses import dataclass
@@ -53,7 +53,7 @@ class LNNMemoryHooks:
         # Metrics
         self._events_processed = 0
         self._events_failed = 0
-        self._last_flush = datetime.utcnow()
+        self._last_flush = datetime.now(timezone.utc)
         
     async def start(self):
         """Start background processing."""
@@ -96,12 +96,12 @@ class LNNMemoryHooks:
                     "similar_patterns": result.get("similar_patterns", [])
                 },
                 metadata={
-                    "timestamp": datetime.utcnow(),
+                    "timestamp": datetime.now(timezone.utc),
                     "model_version": result.get("inference_metadata", {}).get("model_version", "1.0"),
                     "latency_ms": result.get("inference_metadata", {}).get("latency_ms", 0),
                     "context_used": result.get("inference_metadata", {}).get("context_used", False)
                 },
-                timestamp=datetime.utcnow()
+                timestamp=datetime.now(timezone.utc)
             )
             
             await self._enqueue_event(event)
@@ -122,11 +122,11 @@ class LNNMemoryHooks:
                     "trigger": adaptation_event.get("trigger", "unknown")
                 },
                 metadata={
-                    "timestamp": datetime.utcnow(),
+                    "timestamp": datetime.now(timezone.utc),
                     "adaptation_rate": adaptation_event.get("adaptation_rate", 0.01),
                     "performance_delta": adaptation_event.get("performance_delta", 0.0)
                 },
-                timestamp=datetime.utcnow()
+                timestamp=datetime.now(timezone.utc)
             )
             
             await self._enqueue_event(event)
@@ -147,11 +147,11 @@ class LNNMemoryHooks:
                     "context": pattern.get("context", {})
                 },
                 metadata={
-                    "timestamp": datetime.utcnow(),
+                    "timestamp": datetime.now(timezone.utc),
                     "source": pattern.get("source", "lnn"),
                     "importance": pattern.get("importance", 0.5)
                 },
-                timestamp=datetime.utcnow()
+                timestamp=datetime.now(timezone.utc)
             )
             
             await self._enqueue_event(event)
@@ -166,7 +166,7 @@ class LNNMemoryHooks:
         if not self.memory:
             return []
             
-        cutoff_time = datetime.utcnow() - timedelta(hours=time_window_hours)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=time_window_hours)
         
         results = await self.memory.search_memories(
             agent_id="lnn",
@@ -186,7 +186,7 @@ class LNNMemoryHooks:
         if not self.memory:
             return []
             
-        cutoff_time = datetime.utcnow() - timedelta(hours=hours)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours)
         
         adaptations = await self.memory.get_memories(
             agent_id="lnn",
@@ -262,7 +262,7 @@ class LNNMemoryHooks:
                         if len(self._event_queue) < self._event_queue.maxlen:
                             self._event_queue.append(event)
                             
-            self._last_flush = datetime.utcnow()
+            self._last_flush = datetime.now(timezone.utc)
             
     def _compute_embedding(self, event: MemoryEvent) -> List[float]:
         """Compute embedding for similarity search."""
@@ -303,7 +303,7 @@ class LNNMemoryHooks:
         if not self.memory:
             return
             
-        cutoff_time = datetime.utcnow() - timedelta(days=self.retention_days)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(days=self.retention_days)
         
         deleted = await self.memory.delete_memories(
             agent_id="lnn",
@@ -319,5 +319,5 @@ class LNNMemoryHooks:
             "events_failed": self._events_failed,
             "queue_size": len(self._event_queue),
             "last_flush": self._last_flush.isoformat(),
-            "uptime_seconds": (datetime.utcnow() - self._last_flush).total_seconds()
+            "uptime_seconds": (datetime.now(timezone.utc) - self._last_flush).total_seconds()
         }

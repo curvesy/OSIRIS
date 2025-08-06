@@ -10,7 +10,7 @@ Defines all event types with:
 
 from enum import Enum
 from typing import Dict, Any, Optional, List, Union
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass, field
 import json
 import uuid
@@ -365,7 +365,7 @@ class SystemEvent(EventSchema):
             data={
                 "status": status,
                 "checks": checks,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             },
             **kwargs
         )
@@ -392,7 +392,7 @@ class SystemEvent(EventSchema):
                 "alert_type": alert_type,
                 "message": message,
                 "details": details or {},
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             },
             **kwargs
         )

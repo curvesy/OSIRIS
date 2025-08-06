@@ -18,7 +18,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Dict, Any, Optional, Tuple, List, Union, Callable
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 from enum import Enum
 import structlog
@@ -391,7 +391,7 @@ class LiquidNeuralNetwork(nn.Module):
         Returns:
             Output tensor or (output, info_dict) if return_trajectories=True
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         # Handle both sequential and single-step inputs
         if x.dim() == 2:
@@ -435,7 +435,7 @@ class LiquidNeuralNetwork(nn.Module):
             output = output.squeeze(1)
         
         # Update metrics
-        inference_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+        inference_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
         self._update_metrics(inference_time)
         
         if return_trajectories:

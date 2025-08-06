@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 from aura_common.logging import get_logger
 from ..orchestration.workflows.state import create_initial_state
@@ -325,7 +325,7 @@ class WorkflowBenchmark:
     
     def save_results(self, summaries: Dict[str, BenchmarkSummary]):
         """Save benchmark results to file."""
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
         
         # Convert to JSON-serializable format
         data = {

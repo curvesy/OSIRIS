@@ -7,7 +7,7 @@ Enriches agent state with memory insights and contextual information.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 import sys
@@ -307,7 +307,7 @@ class ContextEngine:
             if hasattr(enriched_state, '__dict__'):
                 enriched_state.context_enriched = True
                 enriched_state.context_quality = enriched_context.get("context_quality", 0.5)
-                enriched_state.context_timestamp = datetime.utcnow().isoformat()
+                enriched_state.context_timestamp = datetime.now(timezone.utc).isoformat()
             
             return enriched_state
             

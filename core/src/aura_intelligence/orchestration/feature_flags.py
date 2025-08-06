@@ -1,272 +1,322 @@
-"""
-🚩 Orchestration Feature Flags
-
-Manages feature flags for progressive rollout of orchestration capabilities.
-Allows enabling/disabling features based on deployment environment and scale.
-
-Key Features:
-- Environment-based feature control
-- Progressive rollout capabilities
-- Safe fallback mechanisms
-- Runtime feature toggling
-"""
-
-import os
-from typing import Dict, Any, Optional
+"""Feature flag management for orchestration capabilities"""
 from enum import Enum
-from dataclasses import dataclass
+from typing import Dict, Any, Optional
+import os
+import json
+from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class FeatureFlag(Enum):
-    """Available feature flags"""
-    # Phase 1: Semantic Foundation
-    SEMANTIC_ORCHESTRATION = "semantic_orchestration"
-    LANGGRAPH_INTEGRATION = "langgraph_integration"
-    TDA_INTEGRATION = "tda_integration"
-    
-    # Phase 2: Durable Execution
-    TEMPORAL_WORKFLOWS = "temporal_workflows"
-    SAGA_PATTERNS = "saga_patterns"
-    HYBRID_CHECKPOINTING = "hybrid_checkpointing"
-    POSTGRESQL_CHECKPOINTING = "postgresql_checkpointing"
-    CROSS_THREAD_MEMORY = "cross_thread_memory"
-    
-    # Phase 3: Distributed Scaling (Behind flags for startup)
+    """Available feature flags for orchestration"""
+    # Existing feature flags
+    ASYNC_ORCHESTRATION = "async_orchestration"
+    MULTI_AGENT_COUNCIL = "multi_agent_council"
+    DISTRIBUTED_MEMORY = "distributed_memory"
+    ADVANCED_MONITORING = "advanced_monitoring"
     RAY_SERVE_ORCHESTRATION = "ray_serve_orchestration"
-    CREWAI_FLOWS = "crewai_flows"
-    DISTRIBUTED_COORDINATION = "distributed_coordination"
-    AUTO_SCALING = "auto_scaling"
+    TEMPORAL_WORKFLOWS = "temporal_workflows"
+    CREWAI_INTEGRATION = "crewai_integration"
+    LANGGRAPH_ENHANCEMENTS = "langgraph_enhancements"
     
-    # Phase 4: Production Excellence (Future)
-    EVENT_DRIVEN_ORCHESTRATION = "event_driven_orchestration"
-    ADVANCED_PATTERN_MATCHING = "advanced_pattern_matching"
-    CONSENSUS_ORCHESTRATION = "consensus_orchestration"
+    # Power Sprint Week 1 feature flags
+    KV_MIRROR_ENABLED = "kv_mirror_enabled"
+    ENTROPY_COMPACTION_ENABLED = "entropy_compaction_enabled"
+    RESOURCEFLAME_ENABLED = "resourceflame_enabled"
+    
+    # Power Sprint Week 2 feature flags
+    LAZY_WITNESS_ENABLED = "lazy_witness_enabled"
+    MATRIX_PH_GPU_ENABLED = "matrix_ph_gpu_enabled"
+    PHFORMER_TINY_ENABLED = "phformer_tiny_enabled"
+    CHUNKED_MICROBATCH_ENABLED = "chunked_microbatch_enabled"
+    
+    # Power Sprint Week 3 feature flags
+    ADAPTIVE_CHECKPOINT_ENABLED = "adaptive_checkpoint_enabled"
+    TEMPORAL_SIGNALFIRST_ENABLED = "temporal_signalfirst_enabled"
+    NEO4J_MOTIFCOST_ENABLED = "neo4j_motifcost_enabled"
+    
+    # Power Sprint Week 4 feature flags
+    DIFF_COMM_V2B_ENABLED = "diff_comm_v2b_enabled"
+    WEBSUB_ALERTS_ENABLED = "websub_alerts_enabled"
+    HASH_CARRY_SEEDS_ENABLED = "hash_carry_seeds_enabled"
+    KMUX_EBPF_ENABLED = "kmux_ebpf_enabled"
+    
+    # Migration support flags
+    DUAL_WRITE_MODE = "dual_write_mode"
+    REDIS_READS_ENABLED = "redis_reads_enabled"
 
-@dataclass
-class FeatureConfig:
-    """Configuration for a feature flag"""
-    enabled: bool
-    rollout_percentage: float = 100.0
-    environment_restrictions: Optional[list] = None
-    dependencies: Optional[list] = None
-    description: str = ""
 
-class OrchestrationFeatureFlags:
-    """
-    Manages orchestration feature flags for progressive rollout
-    """
+# Default feature flag configurations
+FEATURE_CONFIGS: Dict[FeatureFlag, Dict[str, Any]] = {
+    # Existing features
+    FeatureFlag.ASYNC_ORCHESTRATION: {
+        "enabled": True,
+        "description": "Enable asynchronous orchestration patterns",
+        "rollout_percentage": 100
+    },
+    FeatureFlag.MULTI_AGENT_COUNCIL: {
+        "enabled": True,
+        "description": "Enable multi-agent council consensus",
+        "rollout_percentage": 100
+    },
+    FeatureFlag.DISTRIBUTED_MEMORY: {
+        "enabled": True,
+        "description": "Enable distributed memory across agents",
+        "rollout_percentage": 100
+    },
+    FeatureFlag.ADVANCED_MONITORING: {
+        "enabled": True,
+        "description": "Enable advanced monitoring with OpenTelemetry",
+        "rollout_percentage": 100
+    },
+    FeatureFlag.RAY_SERVE_ORCHESTRATION: {
+        "enabled": False,
+        "description": "Use Ray Serve for distributed orchestration",
+        "rollout_percentage": 0
+    },
+    FeatureFlag.TEMPORAL_WORKFLOWS: {
+        "enabled": True,
+        "description": "Enable Temporal workflow orchestration",
+        "rollout_percentage": 100
+    },
+    FeatureFlag.CREWAI_INTEGRATION: {
+        "enabled": False,
+        "description": "Enable CrewAI integration for hierarchical agents",
+        "rollout_percentage": 0
+    },
+    FeatureFlag.LANGGRAPH_ENHANCEMENTS: {
+        "enabled": True,
+        "description": "Enable LangGraph enhancements",
+        "rollout_percentage": 100
+    },
     
-    def __init__(self, environment: str = "development"):
-        self.environment = environment
-        self.features = self._initialize_default_features()
-        self._load_environment_overrides()
+    # Power Sprint Week 1 - Quick Wins
+    FeatureFlag.KV_MIRROR_ENABLED: {
+        "enabled": False,
+        "description": "Use NATS JetStream KV-Mirror instead of Redis",
+        "rollout_percentage": 0,
+        "power_sprint_week": 1
+    },
+    FeatureFlag.ENTROPY_COMPACTION_ENABLED: {
+        "enabled": True,  # CRITICAL: Must be true from start
+        "description": "HyperOak entropy-aware compaction (40% storage reduction)",
+        "rollout_percentage": 100,
+        "power_sprint_week": 1,
+        "irreversible": True
+    },
+    FeatureFlag.RESOURCEFLAME_ENABLED: {
+        "enabled": False,
+        "description": "Grafana ResourceFlame panel for GPU/NUMA visualization",
+        "rollout_percentage": 0,
+        "power_sprint_week": 1
+    },
     
-    def _initialize_default_features(self) -> Dict[FeatureFlag, FeatureConfig]:
-        """Initialize default feature configurations"""
-        return {
-            # Phase 1: Always enabled (core functionality)
-            FeatureFlag.SEMANTIC_ORCHESTRATION: FeatureConfig(
-                enabled=True,
-                description="Core semantic orchestration capabilities"
-            ),
-            FeatureFlag.LANGGRAPH_INTEGRATION: FeatureConfig(
-                enabled=True,
-                description="LangGraph StateGraph integration"
-            ),
-            FeatureFlag.TDA_INTEGRATION: FeatureConfig(
-                enabled=True,
-                description="TDA context integration"
-            ),
-            
-            # Phase 2: Enabled for startup (essential durability)
-            FeatureFlag.TEMPORAL_WORKFLOWS: FeatureConfig(
-                enabled=True,
-                description="Temporal.io durable workflows"
-            ),
-            FeatureFlag.SAGA_PATTERNS: FeatureConfig(
-                enabled=True,
-                description="Saga pattern compensation"
-            ),
-            FeatureFlag.HYBRID_CHECKPOINTING: FeatureConfig(
-                enabled=True,
-                description="Hybrid checkpoint management"
-            ),
-            FeatureFlag.POSTGRESQL_CHECKPOINTING: FeatureConfig(
-                enabled=True,
-                description="PostgreSQL-based checkpointing"
-            ),
-            FeatureFlag.CROSS_THREAD_MEMORY: FeatureConfig(
-                enabled=True,
-                description="Cross-thread memory and learning"
-            ),
-            
-            # Phase 3: Disabled by default (distributed scaling)
-            FeatureFlag.RAY_SERVE_ORCHESTRATION: FeatureConfig(
-                enabled=False,
-                environment_restrictions=["production", "staging"],
-                dependencies=[FeatureFlag.SEMANTIC_ORCHESTRATION],
-                description="Ray Serve distributed agent deployments"
-            ),
-            FeatureFlag.CREWAI_FLOWS: FeatureConfig(
-                enabled=False,
-                environment_restrictions=["production", "staging"],
-                dependencies=[FeatureFlag.SEMANTIC_ORCHESTRATION],
-                description="CrewAI Flows hierarchical coordination"
-            ),
-            FeatureFlag.DISTRIBUTED_COORDINATION: FeatureConfig(
-                enabled=False,
-                environment_restrictions=["production"],
-                dependencies=[
-                    FeatureFlag.RAY_SERVE_ORCHESTRATION,
-                    FeatureFlag.CREWAI_FLOWS,
-                    FeatureFlag.HYBRID_CHECKPOINTING
-                ],
-                description="Cross-system distributed coordination"
-            ),
-            FeatureFlag.AUTO_SCALING: FeatureConfig(
-                enabled=False,
-                environment_restrictions=["production"],
-                dependencies=[FeatureFlag.RAY_SERVE_ORCHESTRATION],
-                description="Automatic scaling based on load"
-            ),
-            
-            # Phase 4: Future features (disabled)
-            FeatureFlag.EVENT_DRIVEN_ORCHESTRATION: FeatureConfig(
-                enabled=False,
-                description="Event-driven semantic coordination"
-            ),
-            FeatureFlag.ADVANCED_PATTERN_MATCHING: FeatureConfig(
-                enabled=False,
-                description="Advanced semantic pattern matching"
-            ),
-            FeatureFlag.CONSENSUS_ORCHESTRATION: FeatureConfig(
-                enabled=False,
-                description="Distributed consensus orchestration"
-            )
-        }
+    # Power Sprint Week 2 - Compute Optimizations
+    FeatureFlag.LAZY_WITNESS_ENABLED: {
+        "enabled": False,
+        "description": "Lazy Witness + Witness-Z-Rips for 3x TDA speedup",
+        "rollout_percentage": 0,
+        "power_sprint_week": 2
+    },
+    FeatureFlag.MATRIX_PH_GPU_ENABLED: {
+        "enabled": False,
+        "description": "Matrix-PH GPU fusion kernel (1.6x speedup)",
+        "rollout_percentage": 0,
+        "power_sprint_week": 2
+    },
+    FeatureFlag.PHFORMER_TINY_ENABLED: {
+        "enabled": False,
+        "description": "PHFormer-Tiny-8B model (same accuracy, 1/3 size)",
+        "rollout_percentage": 0,
+        "power_sprint_week": 2
+    },
+    FeatureFlag.CHUNKED_MICROBATCH_ENABLED: {
+        "enabled": False,
+        "description": "MAX Serve chunked micro-batching (70%+ GPU util)",
+        "rollout_percentage": 0,
+        "power_sprint_week": 2
+    },
     
-    def _load_environment_overrides(self):
-        """Load feature flag overrides from environment variables"""
-        for feature in FeatureFlag:
-            env_var = f"AURA_FEATURE_{feature.value.upper()}"
-            env_value = os.getenv(env_var)
-            
-            if env_value is not None:
-                if env_value.lower() in ('true', '1', 'yes', 'on'):
-                    self.features[feature].enabled = True
-                elif env_value.lower() in ('false', '0', 'no', 'off'):
-                    self.features[feature].enabled = False
+    # Power Sprint Week 3 - Infrastructure & Durability
+    FeatureFlag.ADAPTIVE_CHECKPOINT_ENABLED: {
+        "enabled": False,
+        "description": "Adaptive checkpoint coalescing (45% fewer DB writes)",
+        "rollout_percentage": 0,
+        "power_sprint_week": 3
+    },
+    FeatureFlag.TEMPORAL_SIGNALFIRST_ENABLED: {
+        "enabled": False,
+        "description": "Temporal SignalFirst (20ms latency reduction)",
+        "rollout_percentage": 0,
+        "power_sprint_week": 3
+    },
+    FeatureFlag.NEO4J_MOTIFCOST_ENABLED: {
+        "enabled": False,
+        "description": "Neo4j MotifCost index (4-6x query speedup)",
+        "rollout_percentage": 0,
+        "power_sprint_week": 3
+    },
     
-    def is_enabled(self, feature: FeatureFlag) -> bool:
-        """Check if a feature is enabled"""
-        config = self.features.get(feature)
-        if not config:
-            return False
+    # Power Sprint Week 4 - Network & Security
+    FeatureFlag.DIFF_COMM_V2B_ENABLED: {
+        "enabled": False,
+        "description": "Diff-Comm-v2b with dynamic header pruning (3x bandwidth reduction)",
+        "rollout_percentage": 0,
+        "power_sprint_week": 4
+    },
+    FeatureFlag.WEBSUB_ALERTS_ENABLED: {
+        "enabled": False,
+        "description": "Web-sub protocol for alerts (bank-friendly)",
+        "rollout_percentage": 0,
+        "power_sprint_week": 4
+    },
+    FeatureFlag.HASH_CARRY_SEEDS_ENABLED: {
+        "enabled": False,
+        "description": "Hash-with-Carry seeds for deterministic replay",
+        "rollout_percentage": 0,
+        "power_sprint_week": 4
+    },
+    FeatureFlag.KMUX_EBPF_ENABLED: {
+        "enabled": False,
+        "description": "KMUX multiprobe eBPF (reduced kernel modules)",
+        "rollout_percentage": 0,
+        "power_sprint_week": 4
+    },
+    
+    # Migration support
+    FeatureFlag.DUAL_WRITE_MODE: {
+        "enabled": False,
+        "description": "Write to both Redis and NATS during migration",
+        "rollout_percentage": 0,
+        "migration_flag": True
+    },
+    FeatureFlag.REDIS_READS_ENABLED: {
+        "enabled": True,
+        "description": "Read from Redis (disable after KV-Mirror migration)",
+        "rollout_percentage": 100,
+        "migration_flag": True
+    }
+}
+
+
+class FeatureFlagManager:
+    """Manages feature flags with support for runtime updates and per-tenant overrides"""
+    
+    def __init__(self):
+        self.flags = FEATURE_CONFIGS.copy()
+        self.tenant_overrides: Dict[str, Dict[FeatureFlag, bool]] = {}
+        self._load_overrides()
+    
+    def _load_overrides(self):
+        """Load feature flag overrides from environment or config file"""
+        # Check for environment variable overrides
+        for flag in FeatureFlag:
+            env_key = f"AURA_FF_{flag.value.upper()}"
+            if env_key in os.environ:
+                try:
+                    self.flags[flag]["enabled"] = os.environ[env_key].lower() == "true"
+                    logger.info(f"Feature flag {flag.value} overridden by env: {self.flags[flag]['enabled']}")
+                except Exception as e:
+                    logger.error(f"Error parsing feature flag env var {env_key}: {e}")
         
-        # Check if feature is enabled
-        if not config.enabled:
-            return False
-        
-        # Check environment restrictions
-        if (config.environment_restrictions and 
-            self.environment not in config.environment_restrictions):
-            return False
-        
-        # Check dependencies
-        if config.dependencies:
-            for dependency in config.dependencies:
-                if not self.is_enabled(dependency):
-                    return False
-        
-        return True
+        # Load from config file if exists
+        config_path = os.environ.get("AURA_FF_CONFIG_PATH", "/etc/aura/feature_flags.json")
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    config = json.load(f)
+                    for flag_name, settings in config.items():
+                        try:
+                            flag = FeatureFlag(flag_name)
+                            self.flags[flag].update(settings)
+                            logger.info(f"Feature flag {flag_name} loaded from config")
+                        except ValueError:
+                            logger.warning(f"Unknown feature flag in config: {flag_name}")
+            except Exception as e:
+                logger.error(f"Error loading feature flag config: {e}")
     
-    def enable_feature(self, feature: FeatureFlag, check_dependencies: bool = True):
-        """Enable a feature flag"""
-        if check_dependencies:
-            config = self.features.get(feature)
-            if config and config.dependencies:
-                for dependency in config.dependencies:
-                    if not self.is_enabled(dependency):
-                        raise ValueError(
-                            f"Cannot enable {feature.value}: dependency {dependency.value} not enabled"
-                        )
+    def is_enabled(self, flag: FeatureFlag, tenant_id: Optional[str] = None) -> bool:
+        """Check if a feature flag is enabled, with optional tenant override"""
+        # Check tenant-specific override first
+        if tenant_id and tenant_id in self.tenant_overrides:
+            if flag in self.tenant_overrides[tenant_id]:
+                return self.tenant_overrides[tenant_id][flag]
         
-        if feature in self.features:
-            self.features[feature].enabled = True
+        # Check global flag
+        return self.flags.get(flag, {}).get("enabled", False)
     
-    def disable_feature(self, feature: FeatureFlag):
-        """Disable a feature flag"""
-        if feature in self.features:
-            self.features[feature].enabled = False
+    def set_override(self, flag: FeatureFlag, enabled: bool, tenant_id: Optional[str] = None):
+        """Set a feature flag override"""
+        if tenant_id:
+            if tenant_id not in self.tenant_overrides:
+                self.tenant_overrides[tenant_id] = {}
+            self.tenant_overrides[tenant_id][flag] = enabled
+            logger.info(f"Set tenant override for {tenant_id}: {flag.value}={enabled}")
+        else:
+            self.flags[flag]["enabled"] = enabled
+            logger.info(f"Set global flag: {flag.value}={enabled}")
     
-    def get_enabled_features(self) -> list:
-        """Get list of currently enabled features"""
-        return [
-            feature.value for feature, config in self.features.items()
-            if self.is_enabled(feature)
-        ]
+    def clear_override(self, flag: FeatureFlag, tenant_id: str):
+        """Clear a tenant-specific override"""
+        if tenant_id in self.tenant_overrides and flag in self.tenant_overrides[tenant_id]:
+            del self.tenant_overrides[tenant_id][flag]
+            logger.info(f"Cleared tenant override for {tenant_id}: {flag.value}")
     
-    def get_feature_status(self) -> Dict[str, Dict[str, Any]]:
-        """Get comprehensive feature status"""
-        status = {}
+    def get_all_flags(self, tenant_id: Optional[str] = None) -> Dict[str, bool]:
+        """Get all feature flag states"""
+        result = {}
+        for flag in FeatureFlag:
+            result[flag.value] = self.is_enabled(flag, tenant_id)
+        return result
+    
+    def get_config(self, flag: FeatureFlag) -> Dict[str, Any]:
+        """Get full configuration for a feature flag"""
+        return self.flags.get(flag, {})
+    
+    def get_power_sprint_status(self) -> Dict[int, Dict[str, Any]]:
+        """Get Power Sprint optimization status by week"""
+        status = {1: {}, 2: {}, 3: {}, 4: {}}
         
-        for feature, config in self.features.items():
-            status[feature.value] = {
-                "enabled": self.is_enabled(feature),
-                "configured_enabled": config.enabled,
-                "environment_restricted": (
-                    config.environment_restrictions and 
-                    self.environment not in config.environment_restrictions
-                ),
-                "dependencies_met": (
-                    not config.dependencies or 
-                    all(self.is_enabled(dep) for dep in config.dependencies)
-                ),
-                "description": config.description
-            }
+        for flag, config in self.flags.items():
+            if "power_sprint_week" in config:
+                week = config["power_sprint_week"]
+                status[week][flag.value] = {
+                    "enabled": config["enabled"],
+                    "description": config["description"],
+                    "irreversible": config.get("irreversible", False)
+                }
         
         return status
-
-# Global feature flags instance
-_feature_flags = None
-
-def get_feature_flags(environment: Optional[str] = None) -> OrchestrationFeatureFlags:
-    """Get the global feature flags instance"""
-    global _feature_flags
     
-    if _feature_flags is None or (environment and environment != _feature_flags.environment):
-        env = environment or os.getenv("AURA_ENVIRONMENT", "development")
-        _feature_flags = OrchestrationFeatureFlags(environment=env)
-    
-    return _feature_flags
+    def enable_power_sprint_week(self, week: int):
+        """Enable all optimizations for a specific Power Sprint week"""
+        if week not in [1, 2, 3, 4]:
+            raise ValueError(f"Invalid Power Sprint week: {week}")
+        
+        enabled_flags = []
+        for flag, config in self.flags.items():
+            if config.get("power_sprint_week") == week and not config.get("irreversible"):
+                self.flags[flag]["enabled"] = True
+                enabled_flags.append(flag.value)
+        
+        logger.info(f"Enabled Power Sprint Week {week} flags: {enabled_flags}")
+        return enabled_flags
 
-def is_feature_enabled(feature: FeatureFlag) -> bool:
-    """Quick check if a feature is enabled"""
-    return get_feature_flags().is_enabled(feature)
 
-# Convenience functions for common checks
-def is_distributed_scaling_enabled() -> bool:
-    """Check if distributed scaling features are enabled"""
-    flags = get_feature_flags()
-    return (flags.is_enabled(FeatureFlag.RAY_SERVE_ORCHESTRATION) or
-            flags.is_enabled(FeatureFlag.CREWAI_FLOWS) or
-            flags.is_enabled(FeatureFlag.DISTRIBUTED_COORDINATION))
+# Global feature flag manager instance
+_feature_flag_manager = None
 
-def is_production_ready() -> bool:
-    """Check if system is configured for production"""
-    flags = get_feature_flags()
-    return (flags.is_enabled(FeatureFlag.TEMPORAL_WORKFLOWS) and
-            flags.is_enabled(FeatureFlag.HYBRID_CHECKPOINTING) and
-            flags.is_enabled(FeatureFlag.POSTGRESQL_CHECKPOINTING))
 
-def get_startup_features() -> list:
-    """Get features appropriate for startup deployment"""
-    return [
-        FeatureFlag.SEMANTIC_ORCHESTRATION,
-        FeatureFlag.LANGGRAPH_INTEGRATION,
-        FeatureFlag.TDA_INTEGRATION,
-        FeatureFlag.TEMPORAL_WORKFLOWS,
-        FeatureFlag.SAGA_PATTERNS,
-        FeatureFlag.HYBRID_CHECKPOINTING,
-        FeatureFlag.POSTGRESQL_CHECKPOINTING,
-        FeatureFlag.CROSS_THREAD_MEMORY
-    ]
+def get_feature_flag_manager() -> FeatureFlagManager:
+    """Get or create the global feature flag manager"""
+    global _feature_flag_manager
+    if _feature_flag_manager is None:
+        _feature_flag_manager = FeatureFlagManager()
+    return _feature_flag_manager
+
+
+def is_feature_enabled(flag: FeatureFlag, tenant_id: Optional[str] = None) -> bool:
+    """Convenience function to check if a feature is enabled"""
+    return get_feature_flag_manager().is_enabled(flag, tenant_id)

@@ -12,7 +12,7 @@ Features:
 
 from typing import Dict, Any, Optional, Callable, List, TypeVar, Union
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import asyncio
 import random
@@ -116,7 +116,7 @@ class RetryBudget:
     def __init__(self, tokens_per_minute: int):
         self.capacity = tokens_per_minute
         self.tokens = float(tokens_per_minute)
-        self.last_update = datetime.utcnow()
+        self.last_update = datetime.now(timezone.utc)
         self.lock = asyncio.Lock()
         
         # Metrics
@@ -127,7 +127,7 @@ class RetryBudget:
         """Try to consume tokens from the budget."""
         async with self.lock:
             # Refill tokens based on time elapsed
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             elapsed = (now - self.last_update).total_seconds()
             self.last_update = now
             
@@ -308,7 +308,7 @@ class HedgedRequestManager:
         if not self.config.hedged_requests:
             return await operation(*args, **kwargs)
         
-        request_id = request_id or f"hedge-{datetime.utcnow().timestamp()}"
+        request_id = request_id or f"hedge-{datetime.now(timezone.utc).timestamp()}"
         tasks = []
         
         try:
@@ -357,11 +357,11 @@ class HedgedRequestManager:
     
     async def _execute_with_tracking(self, operation: Callable, *args, **kwargs) -> T:
         """Execute operation with performance tracking."""
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         try:
             return await operation(*args, **kwargs)
         finally:
-            duration = (datetime.utcnow() - start_time).total_seconds() * 1000
+            duration = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
             logger.debug(
                 "Request completed",
                 duration_ms=duration,
@@ -470,7 +470,7 @@ class ContextAwareRetry:
                     })
                     self.retry_counts[operation_name] += 1
                     self.last_errors.append({
-                        "timestamp": datetime.utcnow(),
+                        "timestamp": datetime.now(timezone.utc),
                         "operation": operation_name,
                         "error": str(e),
                         "category": error_category

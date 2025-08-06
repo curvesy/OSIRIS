@@ -10,7 +10,7 @@ Integrates Kafka with:
 
 from typing import Dict, Any, Optional, List, Callable, AsyncIterator
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 import json
 
@@ -149,7 +149,7 @@ class TemporalKafkaConnector(EventProcessor):
         # Track active workflow
         self.active_workflows[event.event_id] = {
             "handle": handle,
-            "start_time": datetime.utcnow(),
+            "start_time": datetime.now(timezone.utc),
             "event": event
         }
         
@@ -177,7 +177,7 @@ class TemporalKafkaConnector(EventProcessor):
         
         self.active_workflows[event.event_id] = {
             "handle": handle,
-            "start_time": datetime.utcnow(),
+            "start_time": datetime.now(timezone.utc),
             "event": event
         }
         

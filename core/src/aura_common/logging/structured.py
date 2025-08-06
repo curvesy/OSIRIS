@@ -11,7 +11,7 @@ from opentelemetry import trace
 from opentelemetry.trace import Span, Status, StatusCode
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from contextvars import ContextVar
 
 # Context variable for storing logger context
@@ -210,7 +210,7 @@ class AuraLogger:
             f"Event: {event_type}",
             event={
                 'type': event_type,
-                'timestamp': datetime.utcnow().isoformat(),
+                'timestamp': datetime.now(timezone.utc).isoformat(),
                 'data': event_data
             }
         )

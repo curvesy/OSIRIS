@@ -10,7 +10,7 @@ Used selectively for critical decisions:
 
 from typing import Dict, Any, Optional, List, Set, Callable, Protocol
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import asyncio
 import random
@@ -71,14 +71,14 @@ class TemporalRaftRPC:
         return await execute_workflow(
             "RaftRPCWorkflow",
             {"from": self.node_id, "to": target, "type": "vote", "request": request},
-            id=f"raft-vote-{self.node_id}-{target}-{datetime.utcnow().timestamp()}"
+            id=f"raft-vote-{self.node_id}-{target}-{datetime.now(timezone.utc).timestamp()}"
         )
     
     async def send_append_entries(self, target: str, request: AppendEntriesRequest) -> Optional[AppendEntriesResponse]:
         return await execute_workflow(
             "RaftRPCWorkflow",
             {"from": self.node_id, "to": target, "type": "append", "request": request},
-            id=f"raft-append-{self.node_id}-{target}-{datetime.utcnow().timestamp()}"
+            id=f"raft-append-{self.node_id}-{target}-{datetime.now(timezone.utc).timestamp()}"
         )
 
 
@@ -187,7 +187,7 @@ class RaftStateMachine:
         self.term = 0
         self.voted_for: Optional[str] = None
         self.leader_id: Optional[str] = None
-        self.last_heartbeat = datetime.utcnow()
+        self.last_heartbeat = datetime.now(timezone.utc)
     
     def transition_to(self, new_state: RaftState):
         """Transition to new state."""
@@ -219,7 +219,7 @@ class RaftStateMachine:
     
     def update_heartbeat(self, leader_id: str):
         """Update heartbeat from leader."""
-        self.last_heartbeat = datetime.utcnow()
+        self.last_heartbeat = datetime.now(timezone.utc)
         self.leader_id = leader_id
 
 
@@ -368,7 +368,7 @@ class RaftCore:
                 "batch": [req.proposal for req in self.batch_buffer],
                 "ids": [req.request_id for req in self.batch_buffer]
             },
-            request_id=f"batch-{datetime.utcnow().timestamp()}"
+            request_id=f"batch-{datetime.now(timezone.utc).timestamp()}"
         )
         
         self.batch_buffer.clear()
@@ -459,7 +459,7 @@ class RaftCore:
     async def _on_election_timeout(self):
         """Handle election timeout."""
         if self.state_machine.state != RaftState.LEADER:
-            time_since = datetime.utcnow() - self.state_machine.last_heartbeat
+            time_since = datetime.now(timezone.utc) - self.state_machine.last_heartbeat
             if time_since > self.timer.election_timeout():
                 await self._start_election()
     

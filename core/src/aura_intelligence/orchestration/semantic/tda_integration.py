@@ -22,7 +22,7 @@ TDA Integration:
 from typing import Dict, Any, List, Optional, Tuple
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import asdict
 
 from .base_interfaces import TDAContext, TDAIntegration
@@ -129,7 +129,7 @@ class TDAContextIntegration(TDAIntegration):
                 current_patterns=patterns.get("patterns", {}),
                 temporal_window=patterns.get("window", "1h"),
                 metadata={
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "source": "tda_streaming",
                     "pattern_count": len(patterns.get("patterns", {})),
                     "anomaly_count": len(anomaly_info.get("anomalies", []))
@@ -154,7 +154,7 @@ class TDAContextIntegration(TDAIntegration):
             current_patterns={},
             temporal_window="1h",
             metadata={
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "source": "fallback",
                 "tda_available": False
             }
@@ -182,7 +182,7 @@ class TDAContextIntegration(TDAIntegration):
             # Prepare orchestration result for TDA
             tda_message = {
                 "correlation_id": correlation_id,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "source": "orchestration",
                 "result": result,
                 "metadata": {
@@ -222,7 +222,7 @@ class TDAContextIntegration(TDAIntegration):
         cache_key = f"patterns_{window}"
         if cache_key in self.pattern_cache:
             cached_time, patterns = self.pattern_cache[cache_key]
-            if datetime.utcnow() - cached_time < timedelta(minutes=5):
+            if datetime.now(timezone.utc) - cached_time < timedelta(minutes=5):
                 return patterns
         
         if not TDA_AVAILABLE:
@@ -233,7 +233,7 @@ class TDAContextIntegration(TDAIntegration):
             patterns = await get_current_patterns(window=window)
             
             # Cache the patterns
-            self.pattern_cache[cache_key] = (datetime.utcnow(), patterns)
+            self.pattern_cache[cache_key] = (datetime.now(timezone.utc), patterns)
             
             return patterns
             
@@ -300,7 +300,7 @@ class TDAContextIntegration(TDAIntegration):
         """Get cached TDA context if still valid"""
         if correlation_id in self.context_cache:
             context, cached_time = self.context_cache[correlation_id]
-            if datetime.utcnow() - cached_time < timedelta(seconds=self.cache_ttl_seconds):
+            if datetime.now(timezone.utc) - cached_time < timedelta(seconds=self.cache_ttl_seconds):
                 return context
             else:
                 # Remove expired cache entry
@@ -310,7 +310,7 @@ class TDAContextIntegration(TDAIntegration):
     
     def _cache_context(self, correlation_id: str, context: TDAContext):
         """Cache TDA context with timestamp"""
-        self.context_cache[correlation_id] = (context, datetime.utcnow())
+        self.context_cache[correlation_id] = (context, datetime.now(timezone.utc))
         
         # Clean up old cache entries (simple LRU)
         if len(self.context_cache) > 1000:
@@ -332,7 +332,7 @@ class TDAContextIntegration(TDAIntegration):
             "tda_available": TDA_AVAILABLE,
             "kafka_connected": self.kafka_client is not None,
             "pattern_cache_size": len(self.pattern_cache),
-            "last_update": datetime.utcnow().isoformat()
+            "last_update": datetime.now(timezone.utc).isoformat()
         }
     
     def _calculate_cache_hit_ratio(self) -> float:
@@ -349,7 +349,7 @@ class TDAContextIntegration(TDAIntegration):
             "tda_available": TDA_AVAILABLE,
             "kafka_connected": False,
             "cache_operational": True,
-            "last_check": datetime.utcnow().isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat()
         }
         
         # Check Kafka connection
@@ -393,7 +393,7 @@ class MockTDAIntegration(TDAIntegration):
             anomaly_severity=0.2,
             current_patterns={"mock_pattern": 0.7},
             temporal_window="1h",
-            metadata={"source": "mock", "timestamp": datetime.utcnow().isoformat()}
+            metadata={"source": "mock", "timestamp": datetime.now(timezone.utc).isoformat()}
         )
     
     async def send_orchestration_result(self, result: Dict[str, Any], correlation_id: str) -> bool:

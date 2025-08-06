@@ -11,7 +11,7 @@ Implements GPU resource allocation using:
 
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import uuid
 
@@ -247,7 +247,7 @@ class GPUAllocationActivities:
                     {"type": "availability", "data": council_task.payload["availability"]},
                     {"type": "cost", "data": council_task.payload["cost"]}
                 ],
-                timestamp=datetime.utcnow()
+                timestamp=datetime.now(timezone.utc)
             )
             votes.append(vote)
             
@@ -378,8 +378,8 @@ class GPUAllocationWorkflow:
                 request_id=request.request_id,
                 status="rejected",
                 allocated_gpus=[],
-                start_time=datetime.utcnow(),
-                end_time=datetime.utcnow(),
+                start_time=datetime.now(timezone.utc),
+                end_time=datetime.now(timezone.utc),
                 estimated_cost=0,
                 cost_per_hour=0,
                 council_votes=[],
@@ -424,8 +424,8 @@ class GPUAllocationWorkflow:
                 request_id=request.request_id,
                 status="rejected",
                 allocated_gpus=[],
-                start_time=datetime.utcnow(),
-                end_time=datetime.utcnow(),
+                start_time=datetime.now(timezone.utc),
+                end_time=datetime.now(timezone.utc),
                 estimated_cost=0,
                 cost_per_hour=0,
                 council_votes=votes,
@@ -453,7 +453,7 @@ class GPUAllocationWorkflow:
         )
         
         # Step 7: Create result
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         end_time = start_time + timedelta(hours=request.duration_hours)
         
         result = GPUAllocationResult(

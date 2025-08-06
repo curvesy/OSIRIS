@@ -8,7 +8,7 @@ and preventing cascading failures in distributed systems.
 from typing import TypeVar, Callable, Optional, Dict, Any, Awaitable
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 
 from ..base import AtomicComponent
@@ -91,7 +91,7 @@ class CircuitBreaker(AtomicComponent[Callable[[], Awaitable[T]], CircuitBreakerR
         self._state = CircuitState.CLOSED
         self._stats = CircuitBreakerStats()
         self._half_open_calls = 0
-        self._last_state_change = datetime.utcnow()
+        self._last_state_change = datetime.now(timezone.utc)
     
     def _validate_config(self) -> None:
         """Validate circuit breaker configuration."""
@@ -107,7 +107,7 @@ class CircuitBreaker(AtomicComponent[Callable[[], Awaitable[T]], CircuitBreakerR
         Returns:
             CircuitBreakerResult with execution details
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         # Check if we should transition states
         self._check_state_transition()
@@ -127,7 +127,7 @@ class CircuitBreaker(AtomicComponent[Callable[[], Awaitable[T]], CircuitBreakerR
             raise CircuitBreakerError(
                 f"Circuit breaker is OPEN",
                 reset_after=(self.config.timeout_seconds - 
-                           (datetime.utcnow() - self._stats.last_failure_time).total_seconds()),
+                           (datetime.now(timezone.utc) - self._stats.last_failure_time).total_seconds()),
                 failure_count=self._stats.consecutive_failures,
                 component_name=self.name
             )
@@ -151,7 +151,7 @@ class CircuitBreaker(AtomicComponent[Callable[[], Awaitable[T]], CircuitBreakerR
         # Try to execute operation
         try:
             result = await operation()
-            execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
             
             # Success
             self._record_success()
@@ -164,7 +164,7 @@ class CircuitBreaker(AtomicComponent[Callable[[], Awaitable[T]], CircuitBreakerR
             )
             
         except Exception as e:
-            execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
             
             # Check if this error should trip the breaker
             if self._should_count_failure(e):
@@ -183,7 +183,7 @@ class CircuitBreaker(AtomicComponent[Callable[[], Awaitable[T]], CircuitBreakerR
         if self._state == CircuitState.OPEN:
             # Check if timeout has passed
             if (self._stats.last_failure_time and 
-                (datetime.utcnow() - self._stats.last_failure_time).total_seconds() >= self.config.timeout_seconds):
+                (datetime.now(timezone.utc) - self._stats.last_failure_time).total_seconds() >= self.config.timeout_seconds):
                 self._transition_to(CircuitState.HALF_OPEN)
                 
         elif self._state == CircuitState.HALF_OPEN:
@@ -199,7 +199,7 @@ class CircuitBreaker(AtomicComponent[Callable[[], Awaitable[T]], CircuitBreakerR
         self._stats.successful_calls += 1
         self._stats.consecutive_successes += 1
         self._stats.consecutive_failures = 0
-        self._stats.last_success_time = datetime.utcnow()
+        self._stats.last_success_time = datetime.now(timezone.utc)
         
         # Check state transitions
         if self._state == CircuitState.HALF_OPEN:
@@ -212,7 +212,7 @@ class CircuitBreaker(AtomicComponent[Callable[[], Awaitable[T]], CircuitBreakerR
         self._stats.failed_calls += 1
         self._stats.consecutive_failures += 1
         self._stats.consecutive_successes = 0
-        self._stats.last_failure_time = datetime.utcnow()
+        self._stats.last_failure_time = datetime.now(timezone.utc)
         
         # Check state transitions
         if self._state == CircuitState.CLOSED:
@@ -225,7 +225,7 @@ class CircuitBreaker(AtomicComponent[Callable[[], Awaitable[T]], CircuitBreakerR
         """Transition to new state."""
         old_state = self._state
         self._state = new_state
-        self._last_state_change = datetime.utcnow()
+        self._last_state_change = datetime.now(timezone.utc)
         
         # Reset half-open counter
         if new_state == CircuitState.HALF_OPEN:
@@ -241,7 +241,7 @@ class CircuitBreaker(AtomicComponent[Callable[[], Awaitable[T]], CircuitBreakerR
         )
         
         # Record in stats
-        self._stats.state_changes.append((new_state, datetime.utcnow()))
+        self._stats.state_changes.append((new_state, datetime.now(timezone.utc)))
     
     def _should_count_failure(self, error: Exception) -> bool:
         """Check if error should count as failure."""

@@ -9,7 +9,7 @@ Based on LangGraph Academy ambient agents and professional configuration pattern
 import asyncio
 import logging
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Annotated, Sequence, Optional
 from typing_extensions import TypedDict
 
@@ -1095,7 +1095,7 @@ class CollectiveWorkflow:
 
     def __init__(self, base_config: Optional[Dict[str, Any]] = None):
         self.base_config = base_config or {}
-        self.workflow_id = f"collective_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+        self.workflow_id = f"collective_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         self.app = None
 
         logger.info(f"🎼 CollectiveWorkflow created: {self.workflow_id}")

@@ -9,7 +9,7 @@ New generation of agents built on the Phase 2 foundation with:
 """
 
 from .observer import ObserverAgentV2
-# from .analyst import AnalystAgentV2  # Temporarily commented out - module not available
+from .analyst import AnalystAgentV2
 from .search import SearchAgentV2
 from .executor import ExecutorAgentV2
 from .coordinator import CoordinatorAgentV2

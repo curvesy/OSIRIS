@@ -5,6 +5,9 @@ This package provides agents that can participate in multi-agent
 councils for collaborative decision making.
 """
 
+# Agent Council - main coordination class
+from .agent_council import AgentCouncil, CouncilDecision
+
 # LNN Council Agent - graceful import
 try:
     from .lnn_council import (
@@ -29,7 +32,7 @@ except ImportError:
     _production_lnn_available = False
     ProductionLNNCouncilAgent = None
 
-__all__ = []
+__all__ = ["AgentCouncil", "CouncilDecision"]
 
 # Add LNN council components if available
 if _lnn_council_available:

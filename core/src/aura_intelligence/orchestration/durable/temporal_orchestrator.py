@@ -22,7 +22,7 @@ TDA Integration:
 from typing import Dict, Any, List, Optional, Callable, Union
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, asdict
 from enum import Enum
 import uuid
@@ -146,7 +146,7 @@ class TemporalDurableOrchestrator:
                     "tda.correlation_id": config.tda_correlation_id or "none"
                 })
         
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         try:
             # Get TDA context for workflow planning
@@ -161,7 +161,7 @@ class TemporalDurableOrchestrator:
                 result = await self._execute_fallback_workflow(config, input_data, tda_context)
             
             # Record execution for analytics
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             result.execution_time = execution_time
             
             self.execution_history.append(result)
@@ -312,7 +312,7 @@ class TemporalDurableOrchestrator:
         """
         Handle workflow failure with appropriate compensation
         """
-        execution_time = (datetime.utcnow() - start_time).total_seconds()
+        execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
         
         # Notify TDA about workflow failure
         if self.tda_integration and config.tda_correlation_id:
@@ -336,7 +336,7 @@ class TemporalDurableOrchestrator:
             error_details={
                 "error": str(error),
                 "type": type(error).__name__,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             },
             tda_correlation=config.tda_correlation_id
         )

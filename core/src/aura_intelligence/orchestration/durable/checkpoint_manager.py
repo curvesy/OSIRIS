@@ -22,7 +22,7 @@ from typing import Dict, Any, List, Optional, Union
 import asyncio
 import json
 import pickle
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, asdict
 from enum import Enum
 import uuid
@@ -131,7 +131,7 @@ class CheckpointManager:
             step_name=step_name,
             workflow_state=workflow_state,
             tda_context=asdict(tda_context) if tda_context else None,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             metadata={
                 "tda_correlation_id": tda_correlation_id,
                 "creation_method": "automatic",
@@ -183,7 +183,7 @@ class CheckpointManager:
                     "tda.correlation_id": tda_correlation_id or "none"
                 })
         
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         self.recovery_stats["total_recoveries"] += 1
         
         # Determine recovery strategy if not specified
@@ -215,7 +215,7 @@ class CheckpointManager:
             await self._store_checkpoint(checkpoint)
             
             # Record successful recovery
-            recovery_time = (datetime.utcnow() - start_time).total_seconds()
+            recovery_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             self.recovery_stats["successful_recoveries"] += 1
             self.recovery_stats["recovery_times"].append(recovery_time)
             
@@ -243,7 +243,7 @@ class CheckpointManager:
             
         except Exception as e:
             # Record failed recovery
-            recovery_time = (datetime.utcnow() - start_time).total_seconds()
+            recovery_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             
             # Send recovery failure to TDA
             if self.tda_integration and tda_correlation_id:
@@ -320,7 +320,7 @@ class CheckpointManager:
             enhanced_state["recovery_enhancement"] = {
                 "original_tda_context": checkpoint.tda_context,
                 "current_tda_context": asdict(current_tda_context),
-                "enhancement_timestamp": datetime.utcnow().isoformat()
+                "enhancement_timestamp": datetime.now(timezone.utc).isoformat()
             }
         
         return {
@@ -431,7 +431,7 @@ class CheckpointManager:
         """
         Clean up expired checkpoints based on retention policy
         """
-        cutoff_time = datetime.utcnow() - timedelta(hours=self.checkpoint_retention_hours)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=self.checkpoint_retention_hours)
         expired_checkpoints = []
         
         for checkpoint_id, checkpoint in self.checkpoints.items():
@@ -489,7 +489,7 @@ class CheckpointManager:
             return RecoveryStrategy.ROLLBACK_TO_CHECKPOINT  # Safe default
         
         # Analyze checkpoint age
-        checkpoint_age = (datetime.utcnow() - checkpoint.timestamp).total_seconds()
+        checkpoint_age = (datetime.now(timezone.utc) - checkpoint.timestamp).total_seconds()
         
         # Decision logic based on multiple factors
         if tda_context:

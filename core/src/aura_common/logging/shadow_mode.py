@@ -4,7 +4,7 @@ Wrapper for the existing shadow mode logger with enhanced features.
 """
 
 from typing import Optional, Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 from pathlib import Path
 
@@ -130,7 +130,7 @@ async def shadow_log(
     entry = ShadowModeEntry(
         workflow_id=workflow_id,
         thread_id=context.get('thread_id', 'default') if context else 'default',
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         evidence_log=context.get('evidence', []) if context else [],
         memory_context=context.get('memory', {}) if context else {},
         supervisor_decision={'action': action},

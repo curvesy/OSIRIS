@@ -13,7 +13,7 @@ This serves as both a test and a reference implementation.
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional
 import structlog
 from dataclasses import dataclass
@@ -248,7 +248,7 @@ class GPUResourceManager:
         """Allocate GPU with consensus and bulkhead protection."""
         # Create bulkhead request
         bulkhead_request = ResourceRequest(
-            id=f"gpu-{request.agent_id}-{datetime.utcnow().timestamp()}",
+            id=f"gpu-{request.agent_id}-{datetime.now(timezone.utc).timestamp()}",
             operation_name=f"gpu_allocation_{request.workload_type}",
             priority=request.priority,
             resources={
@@ -308,7 +308,7 @@ class GPUResourceManager:
         self.allocated_gpus[request.agent_id] = request.gpu_count
         
         # Start Temporal workflow for lifecycle management
-        workflow_id = f"gpu-lifecycle-{request.agent_id}-{datetime.utcnow().timestamp()}"
+        workflow_id = f"gpu-lifecycle-{request.agent_id}-{datetime.now(timezone.utc).timestamp()}"
         
         workflow_handle = await self.temporal_client.start_workflow(
             "GPULifecycleWorkflow",
@@ -330,8 +330,8 @@ class GPUResourceManager:
             "agent_id": request.agent_id,
             "gpu_count": request.gpu_count,
             "workflow_id": workflow_id,
-            "allocated_at": datetime.utcnow().isoformat(),
-            "expires_at": (datetime.utcnow() + request.duration).isoformat()
+            "allocated_at": datetime.now(timezone.utc).isoformat(),
+            "expires_at": (datetime.now(timezone.utc) + request.duration).isoformat()
         }
     
     async def _publish_allocation_event(
@@ -589,9 +589,9 @@ async def allocate_with_logging(
         priority=request.priority.name
     )
     
-    start_time = datetime.utcnow()
+    start_time = datetime.now(timezone.utc)
     result = await gpu_manager.allocate_gpu(request)
-    duration = (datetime.utcnow() - start_time).total_seconds()
+    duration = (datetime.now(timezone.utc) - start_time).total_seconds()
     
     logger.info(
         f"GPU allocation completed",

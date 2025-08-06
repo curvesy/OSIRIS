@@ -29,7 +29,9 @@ from .circuit_breaker import (
 from .bulkhead import (
     DynamicBulkhead,
     BulkheadConfig,
-    PriorityLevel
+    PriorityLevel,
+    ResourceRequest,
+    ResourceType
 )
 
 from .retry import (
@@ -62,7 +64,10 @@ meter = otel_metrics.get_meter(__name__)
 class ResilienceLevel(Enum):
     """Resilience levels for different criticality."""
     CRITICAL = "critical"      # Full resilience
+    HIGH = "high"              # High resilience
+    MEDIUM = "medium"          # Medium resilience
     STANDARD = "standard"      # Balanced resilience
+    LOW = "low"                # Low resilience
     BEST_EFFORT = "best_effort"  # Minimal resilience
 
 
@@ -390,6 +395,8 @@ __all__ = [
     "DynamicBulkhead",
     "BulkheadConfig",
     "PriorityLevel",
+    "ResourceRequest",
+    "ResourceType",
     
     # Retry
     "ContextAwareRetry",

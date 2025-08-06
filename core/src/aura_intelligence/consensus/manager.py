@@ -5,7 +5,7 @@ Routes decisions to appropriate consensus protocols based on criticality.
 """
 
 from typing import Dict, Any, Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 import structlog
 
@@ -190,7 +190,7 @@ class ConsensusManager:
                 "proposer_id": request.proposer_id
             }
         ) as span:
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
             
             try:
                 # Track active request
@@ -213,7 +213,7 @@ class ConsensusManager:
                         status=ConsensusState.REJECTED,
                         reason=validation.reason,
                         started_at=start_time,
-                        completed_at=datetime.utcnow()
+                        completed_at=datetime.now(timezone.utc)
                     )
                     span.set_status(Status(StatusCode.ERROR, validation.reason))
                     return result
@@ -230,7 +230,7 @@ class ConsensusManager:
                 await self._publish_decision(request, result)
                 
                 # Record metrics
-                duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
+                duration_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                 consensus_latency.record(
                     duration_ms,
                     {
@@ -275,7 +275,7 @@ class ConsensusManager:
                     status=ConsensusState.FAILED,
                     reason=str(e),
                     started_at=start_time,
-                    completed_at=datetime.utcnow()
+                    completed_at=datetime.now(timezone.utc)
                 )
                 
             finally:

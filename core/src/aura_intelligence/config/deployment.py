@@ -6,7 +6,7 @@ Defines settings for different deployment modes (shadow, canary, production).
 
 from typing import List, Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, validator
 
 from .base import BaseSettings
 
@@ -149,8 +149,7 @@ class DeploymentSettings(BaseSettings):
         description="Enabled feature flags"
     )
     
-    @field_validator("deployment_mode")
-    @classmethod
+    @validator("deployment_mode")
     def validate_deployment_mode(cls, v: str) -> str:
         """Validate deployment mode."""
         allowed = {"shadow", "canary", "production"}

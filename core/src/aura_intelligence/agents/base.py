@@ -8,7 +8,7 @@ instrumentation, error handling, and state management.
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, TypeVar, Generic
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 import uuid
 
@@ -20,8 +20,7 @@ from opentelemetry import trace, metrics
 from opentelemetry.trace import Status, StatusCode
 from opentelemetry.metrics import CallbackOptions, Observation
 
-from aura_common.atomic.base import AtomicComponent
-from aura_common.atomic.base.exceptions import ComponentError
+from aura_common.atomic import AtomicComponent, ComponentError
 
 # Type variables for generic agent implementation
 TInput = TypeVar('TInput')
@@ -99,10 +98,10 @@ class AgentState(BaseModel):
         self.messages.append({
             "role": role,
             "content": content,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             **kwargs
         })
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
     
     def add_error(self, error: Exception, step: str) -> None:
         """Record an error."""
@@ -110,9 +109,9 @@ class AgentState(BaseModel):
             "step": step,
             "error": str(error),
             "type": type(error).__name__,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
     
     def get_last_message(self) -> Optional[Dict[str, Any]]:
         """Get the most recent message."""

@@ -10,7 +10,7 @@ import operator
 
 from langgraph.graph import StateGraph, END
 try:
-    from langgraph.prebuilt import ToolExecutor
+    from langgraph.prebuilt import ToolNode as ToolExecutor
 except ImportError:
     # Fallback for older LangGraph versions
     ToolExecutor = None

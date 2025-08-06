@@ -7,7 +7,7 @@ and atomic components for validation, transformation, and enrichment.
 
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import timedelta, timezone
 
 from aura_common.atomic.processors import (
     TextPreprocessor,
@@ -280,7 +280,7 @@ class DataEnrichmentActivity:
             # Add timestamps
             if rules.get("add_timestamp", True):
                 from datetime import datetime
-                enriched_data["processing_timestamp"] = datetime.utcnow().isoformat()
+                enriched_data["processing_timestamp"] = datetime.now(timezone.utc).isoformat()
             
             # Add data quality scores
             if rules.get("add_quality_score", True):

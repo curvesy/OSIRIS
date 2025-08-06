@@ -22,7 +22,7 @@ TDA Integration:
 from typing import Dict, Any, List, Optional, Union, Callable
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, asdict
 from enum import Enum
 import uuid
@@ -141,7 +141,7 @@ class AuraDistributedFlow:
                     "tda.correlation_id": self.config.tda_correlation_id or "none"
                 })
         
-        self.start_time = datetime.utcnow()
+        self.start_time = datetime.now(timezone.utc)
         executed_steps = []
         failed_steps = []
         human_interventions = []
@@ -172,7 +172,7 @@ class AuraDistributedFlow:
                 results = await self._execute_operational_flow(tda_context)
             
             # Calculate execution time
-            execution_time = (datetime.utcnow() - self.start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - self.start_time).total_seconds()
             
             # Create execution result
             flow_result = FlowExecutionResult(
@@ -201,7 +201,7 @@ class AuraDistributedFlow:
             return flow_result
             
         except Exception as e:
-            execution_time = (datetime.utcnow() - self.start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - self.start_time).total_seconds()
             
             error_result = FlowExecutionResult(
                 flow_id=self.config.flow_id,
@@ -502,7 +502,7 @@ class AuraDistributedFlow:
                 "completed_tasks": completed_tasks,
                 "failed_tasks": total_tasks - completed_tasks
             },
-            "aggregation_timestamp": datetime.utcnow().isoformat()
+            "aggregation_timestamp": datetime.now(timezone.utc).isoformat()
         }
     
     # Operational flow steps
@@ -583,7 +583,7 @@ class AuraDistributedFlow:
                 "consistency": True,
                 "performance": True
             },
-            "validation_timestamp": datetime.utcnow().isoformat()
+            "validation_timestamp": datetime.now(timezone.utc).isoformat()
         }
     
     async def _operational_completion_step(
@@ -598,7 +598,7 @@ class AuraDistributedFlow:
             "completion_status": "success",
             "final_results": operational_results,
             "validation_passed": validation_results["validation_status"] == "passed",
-            "completion_timestamp": datetime.utcnow().isoformat(),
+            "completion_timestamp": datetime.now(timezone.utc).isoformat(),
             "next_actions": ["report_results", "cleanup_resources", "update_metrics"]
         }
 

@@ -10,7 +10,7 @@ Implements stream processing patterns:
 
 from typing import Dict, Any, Optional, List, Callable, Tuple, AsyncIterator
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from collections import defaultdict
 import asyncio
@@ -98,7 +98,7 @@ class StateStore:
         async with self._lock:
             # Check if expired
             if key in self.timestamps:
-                if datetime.utcnow() - self.timestamps[key] > self.retention:
+                if datetime.now(timezone.utc) - self.timestamps[key] > self.retention:
                     del self.store[key]
                     del self.timestamps[key]
                     return None
@@ -109,7 +109,7 @@ class StateStore:
         """Put value into state store."""
         async with self._lock:
             self.store[key] = value
-            self.timestamps[key] = datetime.utcnow()
+            self.timestamps[key] = datetime.now(timezone.utc)
             
             # Update metrics
             stream_state_size.set(len(self.store), {"store": self.name})
@@ -124,7 +124,7 @@ class StateStore:
         """Get all values from state store."""
         async with self._lock:
             # Clean expired entries
-            current_time = datetime.utcnow()
+            current_time = datetime.now(timezone.utc)
             expired_keys = [
                 key for key, timestamp in self.timestamps.items()
                 if current_time - timestamp > self.retention
@@ -376,7 +376,7 @@ class AgentEventStream(EventProcessor):
         if event.tokens_used:
             metrics["total_tokens"] += sum(event.tokens_used.values())
         
-        metrics["last_updated"] = datetime.utcnow().isoformat()
+        metrics["last_updated"] = datetime.now(timezone.utc).isoformat()
         
         # Calculate averages
         metrics["avg_duration_ms"] = (
@@ -468,7 +468,7 @@ class AgentEventStream(EventProcessor):
             
             # Store anomaly
             await self.anomalies.put(
-                f"{event.agent_id}:{datetime.utcnow().timestamp()}",
+                f"{event.agent_id}:{datetime.now(timezone.utc).timestamp()}",
                 anomaly_event.dict()
             )
             
@@ -483,7 +483,7 @@ class AgentEventStream(EventProcessor):
                 await asyncio.sleep(self.config.window_size.total_seconds())
                 
                 # Process completed windows
-                current_time = datetime.utcnow()
+                current_time = datetime.now(timezone.utc)
                 completed_windows = []
                 
                 for window_key, events in self.windows.items():
@@ -509,7 +509,7 @@ class AgentEventStream(EventProcessor):
         events: List[AgentEvent]
     ) -> None:
         """Process a completed window of events."""
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         with tracer.start_as_current_span(
             "stream.window.process",
@@ -565,7 +565,7 @@ class AgentEventStream(EventProcessor):
                 )
                 
                 # Record metrics
-                duration = (datetime.utcnow() - start_time).total_seconds() * 1000
+                duration = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                 stream_window_latency.record(
                     duration,
                     {"stream": "agent_events", "window_type": self.config.window_type.value}
@@ -715,7 +715,7 @@ class EventAggregator:
     async def aggregate(self) -> Dict[str, Any]:
         """Aggregate data from all streams."""
         aggregation = {
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(timezone.utc),
             "total_events": 0,
             "events_by_type": defaultdict(int),
             "active_agents": set(),

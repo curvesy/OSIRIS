@@ -10,7 +10,7 @@ Features:
 
 from typing import Dict, Any, Optional, Callable, List
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import asyncio
 import numpy as np
@@ -82,13 +82,13 @@ class CircuitBreakerMetrics:
         """Record successful request."""
         self.requests.append(1)
         self.latencies.append(latency)
-        self.timestamps.append(datetime.utcnow())
+        self.timestamps.append(datetime.now(timezone.utc))
     
     def record_failure(self, latency: float):
         """Record failed request."""
         self.requests.append(0)
         self.latencies.append(latency)
-        self.timestamps.append(datetime.utcnow())
+        self.timestamps.append(datetime.now(timezone.utc))
     
     def get_failure_rate(self) -> float:
         """Calculate current failure rate."""
@@ -214,17 +214,17 @@ class AdaptiveCircuitBreaker:
                 raise CircuitBreakerOpenError(f"Circuit breaker {self.name} is open")
         
         # Execute operation
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         try:
             result = await operation(*args, **kwargs)
-            latency = (datetime.utcnow() - start_time).total_seconds()
+            latency = (datetime.now(timezone.utc) - start_time).total_seconds()
             
             await self._on_success(latency)
             return result
             
         except Exception as e:
-            latency = (datetime.utcnow() - start_time).total_seconds()
+            latency = (datetime.now(timezone.utc) - start_time).total_seconds()
             await self._on_failure(latency, e)
             raise
     
@@ -245,7 +245,7 @@ class AdaptiveCircuitBreaker:
     async def _on_failure(self, latency: float, error: Exception):
         """Handle failed execution."""
         self.metrics.record_failure(latency)
-        self.last_failure_time = datetime.utcnow()
+        self.last_failure_time = datetime.now(timezone.utc)
         
         if self.state == CircuitBreakerState.HALF_OPEN:
             # Failure in half-open, reopen immediately
@@ -312,7 +312,7 @@ class AdaptiveCircuitBreaker:
         if not self.last_failure_time:
             return True
         
-        time_since_failure = datetime.utcnow() - self.last_failure_time
+        time_since_failure = datetime.now(timezone.utc) - self.last_failure_time
         return time_since_failure > self.config.recovery_timeout
     
     def _predict_future_failure(self) -> float:

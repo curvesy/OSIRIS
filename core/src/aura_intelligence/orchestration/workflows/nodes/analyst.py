@@ -4,7 +4,7 @@ Pattern analysis and insight generation for workflows.
 """
 
 from typing import Dict, Any, List, Optional, Protocol
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 import numpy as np
 
@@ -12,7 +12,7 @@ from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 
 from aura_common.logging import get_logger, with_correlation_id
-from aura_common.errors import resilient_operation
+from aura_common import resilient_operation
 from aura_common.config import is_feature_enabled
 
 from ..state import CollectiveState, NodeResult
@@ -70,9 +70,9 @@ class AnalystNode:
     
     @with_correlation_id()
     @resilient_operation(
-        "analyst_node",
-        failure_threshold=3,
-        recovery_timeout=30
+        max_retries=3,
+        delay=1.0,
+        backoff_factor=2.0
     )
     async def __call__(
         self,
@@ -119,7 +119,7 @@ class AnalystNode:
             # Build analysis result
             analysis_result = {
                 "node": self.name,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "patterns": patterns,
                 "tda_results": tda_results,
                 "insights": insights,
@@ -161,7 +161,7 @@ class AnalystNode:
                 "error_log": [{
                     "node": self.name,
                     "error": str(e),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }],
                 "current_step": "analyst_error"
             }

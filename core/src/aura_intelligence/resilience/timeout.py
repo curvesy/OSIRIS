@@ -11,7 +11,7 @@ Features:
 
 from typing import Dict, Any, Optional, Callable, TypeVar, List
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import asyncio
 import statistics
@@ -103,7 +103,7 @@ class DeadlineContext:
     @property
     def remaining_ms(self) -> float:
         """Calculate remaining time in milliseconds."""
-        remaining = (self.absolute_deadline - datetime.utcnow()).total_seconds() * 1000
+        remaining = (self.absolute_deadline - datetime.now(timezone.utc)).total_seconds() * 1000
         return max(0, remaining)
     
     def has_time_for(self, required_ms: float) -> bool:
@@ -304,7 +304,7 @@ class TimeoutCalculator:
         if await self._should_adjust_timeout(operation):
             new_timeout = await self._adjust_timeout(operation, current_timeout)
             self.adaptive_timeouts[operation] = new_timeout
-            self.last_adjustment[operation] = datetime.utcnow()
+            self.last_adjustment[operation] = datetime.now(timezone.utc)
             
             adaptive_adjustments.add(1, {
                 "operation": operation,
@@ -325,7 +325,7 @@ class TimeoutCalculator:
         """Check if timeout should be adjusted."""
         # Don't adjust too frequently
         if operation in self.last_adjustment:
-            time_since = datetime.utcnow() - self.last_adjustment[operation]
+            time_since = datetime.now(timezone.utc) - self.last_adjustment[operation]
             if time_since < timedelta(minutes=1):
                 return False
         
@@ -373,7 +373,7 @@ class TimeoutBudget:
         self.total_timeout_ms = total_timeout_ms
         self.allocation = allocation
         self.consumed: Dict[str, float] = defaultdict(float)
-        self.start_time = datetime.utcnow()
+        self.start_time = datetime.now(timezone.utc)
         
     def get_allocation(self, phase: str) -> float:
         """Get timeout allocation for a phase."""
@@ -394,7 +394,7 @@ class TimeoutBudget:
     
     def total_remaining(self) -> float:
         """Get total remaining time."""
-        elapsed = (datetime.utcnow() - self.start_time).total_seconds() * 1000
+        elapsed = (datetime.now(timezone.utc) - self.start_time).total_seconds() * 1000
         return max(0, self.total_timeout_ms - elapsed)
     
     def is_exhausted(self) -> bool:
@@ -452,7 +452,7 @@ class AdaptiveTimeout:
             span.set_attribute("timeout_ms", timeout_ms)
             
             # Execute with timeout
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
             
             try:
                 result = await asyncio.wait_for(
@@ -461,7 +461,7 @@ class AdaptiveTimeout:
                 )
                 
                 # Record successful execution
-                duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
+                duration_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                 await self.latency_tracker.record_latency(
                     operation_name,
                     duration_ms,
@@ -477,7 +477,7 @@ class AdaptiveTimeout:
                 
             except asyncio.TimeoutError:
                 # Record timeout
-                duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
+                duration_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                 await self.latency_tracker.record_latency(
                     operation_name,
                     duration_ms,
@@ -513,7 +513,7 @@ class AdaptiveTimeout:
             except Exception:
                 # Update context on error
                 if context:
-                    duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
+                    duration_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                     context.consume(duration_ms)
                     context.pop_operation()
                 
@@ -568,7 +568,7 @@ class AdaptiveTimeout:
             phase_timeout_ms = budget.remaining_for_phase(phase)
             
             # Execute with phase timeout
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
             
             result = await self.execute(
                 operation,
@@ -579,7 +579,7 @@ class AdaptiveTimeout:
             )
             
             # Update budget
-            duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
+            duration_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
             budget.consume(phase, duration_ms)
             
             results.append(result)

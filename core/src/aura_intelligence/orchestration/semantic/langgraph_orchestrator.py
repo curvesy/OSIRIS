@@ -19,7 +19,7 @@ TDA Integration:
 from typing import Dict, Any, List, Optional, Callable
 import asyncio
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 # LangGraph imports with fallback
 try:
@@ -228,7 +228,7 @@ class LangGraphSemanticOrchestrator(SemanticOrchestrator):
             "orchestration_strategy": "semantic_decomposition_enhanced",
             "tda_integration": True,
             "memory_enhanced": store is not None,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
         
         state["tda_context"] = tda_context
@@ -262,7 +262,7 @@ class LangGraphSemanticOrchestrator(SemanticOrchestrator):
             state["agent_outputs"][agent_name] = result
             state["execution_trace"].append({
                 "agent": agent_name,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "result_summary": str(result)[:100]  # Truncate for logging
             })
             
@@ -415,12 +415,12 @@ class LangGraphSemanticOrchestrator(SemanticOrchestrator):
                 "urgency_level": task_analysis.urgency_level.value,
                 "coordination_pattern": task_analysis.coordination_pattern.value,
                 "suggested_agents": task_analysis.suggested_agents,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "tda_correlation_id": getattr(tda_context, 'correlation_id', None) if tda_context else None
             }
             
             # Store with unique key
-            key = f"context_{workflow_id}_{datetime.utcnow().timestamp()}"
+            key = f"context_{workflow_id}_{datetime.now(timezone.utc).timestamp()}"
             await store.put(namespace, key, context_data)
             
         except Exception as e:
@@ -449,7 +449,7 @@ class LangGraphSemanticOrchestrator(SemanticOrchestrator):
             state["agent_outputs"][agent_name] = result
             state["execution_trace"].append({
                 "agent": agent_name,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "result_summary": str(result)[:100],  # Truncate for logging
                 "memory_enhanced": agent_memory is not None
             })
@@ -519,11 +519,11 @@ class LangGraphSemanticOrchestrator(SemanticOrchestrator):
                 "workflow_id": workflow_id,
                 "workflow_type": state.get("workflow_metadata", {}).get("workflow_type", "unknown"),
                 "result": result,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "context_summary": str(state.get("context", {}))[:200]  # Truncated context
             }
             
-            key = f"result_{workflow_id}_{datetime.utcnow().timestamp()}"
+            key = f"result_{workflow_id}_{datetime.now(timezone.utc).timestamp()}"
             await store.put(namespace, key, memory_data)
             
         except Exception as e:
@@ -545,11 +545,11 @@ class LangGraphSemanticOrchestrator(SemanticOrchestrator):
                     "agents_completed": result["execution_summary"]["total_agents"],
                     "memory_enhanced": result["execution_summary"]["memory_enhanced"]
                 },
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "outcome": "success"  # Mark as successful pattern
             }
             
-            key = f"pattern_{workflow_type}_{datetime.utcnow().timestamp()}"
+            key = f"pattern_{workflow_type}_{datetime.now(timezone.utc).timestamp()}"
             await store.put(namespace, key, pattern_data)
             
         except Exception as e:
@@ -569,7 +569,7 @@ class LangGraphSemanticOrchestrator(SemanticOrchestrator):
             "context": context,
             "tda_context": tda_context.__dict__ if tda_context else None,
             "agent_memory": agent_memory,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
         # Mock enhanced execution (replace with actual agent calls)

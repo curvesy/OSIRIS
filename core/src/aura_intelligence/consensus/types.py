@@ -5,7 +5,7 @@ Core types and data structures for consensus protocols.
 from enum import Enum
 from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel, Field, validator
 import uuid
 
@@ -104,7 +104,7 @@ class ConsensusRequest:
     def __post_init__(self):
         """Set defaults after initialization."""
         if self.deadline is None:
-            self.deadline = datetime.utcnow() + self.timeout
+            self.deadline = datetime.now(timezone.utc) + self.timeout
         if self.correlation_id is None:
             self.correlation_id = self.request_id
 

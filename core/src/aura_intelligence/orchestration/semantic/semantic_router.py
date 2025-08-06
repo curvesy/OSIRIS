@@ -22,7 +22,7 @@ TDA Integration:
 from typing import Dict, Any, List, Optional, Tuple, Set
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
 from enum import Enum
 
@@ -573,7 +573,7 @@ class SemanticRouter:
     ):
         """Record routing decision for learning and improvement"""
         record = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "selected_agents": decision.selected_agents,
             "strategy": decision.routing_strategy.value,
             "confidence": decision.confidence,

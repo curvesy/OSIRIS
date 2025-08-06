@@ -14,7 +14,7 @@ import structlog
 from opentelemetry import trace
 from opentelemetry.trace import StatusCode
 
-from .exceptions import ComponentError, ConfigurationError, ProcessingError
+from .exceptions import ComponentError, ComponentConfigurationError, ComponentProcessingError
 
 # Type variables for generic component interface
 InputT = TypeVar('InputT')
@@ -84,7 +84,7 @@ class AtomicComponent(ABC, Generic[InputT, OutputT, ConfigT]):
         try:
             self._validate_config()
         except Exception as e:
-            raise ConfigurationError(f"Invalid configuration for {name}: {str(e)}")
+            raise ComponentConfigurationError(f"Invalid configuration for {name}: {str(e)}")
     
     @abstractmethod
     def _validate_config(self) -> None:
@@ -92,7 +92,7 @@ class AtomicComponent(ABC, Generic[InputT, OutputT, ConfigT]):
         Validate component configuration.
         
         Raises:
-            ConfigurationError: If configuration is invalid
+            ComponentConfigurationError: If configuration is invalid
         """
         pass
     
@@ -113,7 +113,7 @@ class AtomicComponent(ABC, Generic[InputT, OutputT, ConfigT]):
             Processed output
             
         Raises:
-            ProcessingError: If processing fails
+            ComponentProcessingError: If processing fails
         """
         pass
     
@@ -200,7 +200,7 @@ class AtomicComponent(ABC, Generic[InputT, OutputT, ConfigT]):
                 if isinstance(e, ComponentError):
                     raise
                 else:
-                    raise ProcessingError(
+                    raise ComponentProcessingError(
                         f"Processing failed in {self.name}: {str(e)}"
                     ) from e
     

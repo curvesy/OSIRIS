@@ -8,7 +8,7 @@ error classification, and recovery mechanisms.
 from typing import Any, Callable, Optional, Dict, List, Type
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 import traceback
 
 from ..base import AtomicComponent
@@ -151,7 +151,7 @@ class ErrorHandler(AtomicComponent[Exception, HandledError, ErrorHandlerConfig])
             error_type=type(error).__name__,
             error_message=str(error),
             stack_trace=traceback.format_exc() if self.config.capture_stack_trace else None,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             strategy_used=self._determine_strategy(error, classification),
             classification=classification,
             recovery_action=classification.suggested_action if classification else None,

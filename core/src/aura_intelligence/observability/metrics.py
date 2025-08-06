@@ -10,7 +10,60 @@ from prometheus_client import REGISTRY, CollectorRegistry
 from typing import Optional
 
 # Create a custom registry if needed
-metrics_registry = REGISTRY
+try:
+    # Try to use existing registry
+    metrics_registry = REGISTRY
+except Exception:
+    # Create new registry if needed
+    metrics_registry = CollectorRegistry()
+
+# ============================================================================
+# TDA Metrics
+# ============================================================================
+
+tda_computations_total = Counter(
+    'aura_tda_computations_total',
+    'Total number of TDA computations',
+    ['algorithm', 'status'],
+    registry=metrics_registry
+)
+
+tda_computation_duration = Histogram(
+    'aura_tda_computation_duration_seconds',
+    'TDA computation duration in seconds',
+    ['algorithm'],
+    buckets=[.1, .5, 1, 2.5, 5, 10, 30, 60],
+    registry=metrics_registry
+)
+
+# ============================================================================
+# Agent Metrics
+# ============================================================================
+
+agent_decisions_total = Counter(
+    'aura_agent_decisions_total',
+    'Total number of agent decisions',
+    ['agent_id', 'decision_type'],
+    registry=metrics_registry
+)
+
+# ============================================================================
+# Workflow Metrics
+# ============================================================================
+
+workflow_executions_total = Counter(
+    'aura_workflow_executions_total',
+    'Total number of workflow executions',
+    ['status'],
+    registry=metrics_registry
+)
+
+workflow_duration = Histogram(
+    'aura_workflow_duration_seconds',
+    'Workflow execution duration in seconds',
+    ['status'],
+    registry=metrics_registry
+)
 
 # ============================================================================
 # Event Store Metrics
@@ -446,3 +499,39 @@ system_info.info({
     'architecture': 'event-sourced',
     'platform': 'kubernetes'
 })
+
+# Metrics collector singleton
+class MetricsCollector:
+    """Singleton metrics collector for easy access to all metrics."""
+    
+    def __init__(self):
+        self.event_processed_total = event_processed_total
+        self.event_processing_duration = event_processing_duration
+        self.tda_computations_total = tda_computations_total
+        self.tda_computation_duration = tda_computation_duration
+        self.agent_decisions_total = agent_decisions_total
+        self.workflow_executions_total = workflow_executions_total
+        self.workflow_duration = workflow_duration
+        
+        # Agent metrics
+        self.agents_created = Counter(
+            'aura_agents_created_total',
+            'Total number of agents created',
+            ['agent_type'],
+            registry=metrics_registry
+        )
+        
+        self.agent_creation_errors = Counter(
+            'aura_agent_creation_errors_total',
+            'Total number of agent creation errors',
+            ['agent_type', 'error_type'],
+            registry=metrics_registry
+        )
+        
+    def record_workflow_completion(self, workflow_id: str, duration: float, success: bool):
+        """Record workflow completion metrics"""
+        status = "success" if success else "failed"
+        self.workflow_executions_total.labels(status=status).inc()
+        self.workflow_duration.labels(status=status).observe(duration)
+        
+metrics_collector = MetricsCollector()

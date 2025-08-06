@@ -4,7 +4,7 @@ Decision-making and coordination for workflow orchestration.
 """
 
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 from enum import Enum
 
@@ -12,7 +12,7 @@ from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 
 from aura_common.logging import get_logger, with_correlation_id
-from aura_common.errors import resilient_operation
+from aura_common import resilient_operation
 from aura_common.config import is_feature_enabled
 
 from ..state import CollectiveState, NodeResult
@@ -54,9 +54,9 @@ class SupervisorNode:
     
     @with_correlation_id()
     @resilient_operation(
-        "supervisor_node",
-        failure_threshold=3,
-        recovery_timeout=30
+        max_retries=3,
+        delay=1.0,
+        backoff_factor=2.0
     )
     async def __call__(
         self,
@@ -146,7 +146,7 @@ class SupervisorNode:
                 "error_log": [{
                     "node": self.name,
                     "error": str(e),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }],
                 "last_error": {
                     "node": self.name,
@@ -248,7 +248,7 @@ class SupervisorNode:
         """Build decision record for audit trail."""
         return {
             "node": self.name,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "decision": decision.value,
             "risk_score": risk_score,
             "analysis": analysis,

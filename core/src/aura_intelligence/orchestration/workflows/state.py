@@ -5,7 +5,7 @@ Clean state definitions for LangGraph workflows.
 
 from typing import Dict, Any, List, Annotated, Sequence, Optional
 from typing_extensions import TypedDict
-from datetime import datetime
+from datetime import datetime, timezone
 
 from langgraph.graph.message import add_messages
 from langchain_core.messages import BaseMessage
@@ -139,7 +139,7 @@ def create_initial_state(
         "last_error": None,
         "system_health": {
             "status": "healthy",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         },
         "validation_results": None,
         "shadow_mode_enabled": system_config.logging.shadow_mode_enabled,
@@ -182,6 +182,6 @@ def update_state_safely(
     
     # Update timestamp
     if "system_health" in new_state:
-        new_state["system_health"]["last_updated"] = datetime.utcnow().isoformat()
+        new_state["system_health"]["last_updated"] = datetime.now(timezone.utc).isoformat()
     
     return CollectiveState(**new_state)  # type: ignore

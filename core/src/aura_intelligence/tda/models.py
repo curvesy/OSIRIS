@@ -5,7 +5,7 @@ Enterprise Pydantic models for TDA operations with validation and metrics.
 
 from typing import List, Dict, Any, Optional, Union, Literal
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, validator, root_validator
 import numpy as np
 from enum import Enum
 
@@ -26,6 +26,23 @@ class DataFormat(str, Enum):
     SIMPLICIAL_COMPLEX = "simplicial_complex"
     TIME_SERIES = "time_series"
     GRAPH = "graph"
+
+
+class BettiNumbers(BaseModel):
+    """Betti numbers for topological features."""
+    b0: int = Field(0, ge=0, description="0-dimensional features (connected components)")
+    b1: int = Field(0, ge=0, description="1-dimensional features (loops)")
+    b2: int = Field(0, ge=0, description="2-dimensional features (voids)")
+    
+
+class TDAResult(BaseModel):
+    """Result of TDA computation."""
+    betti_numbers: BettiNumbers = Field(..., description="Topological invariants")
+    persistence_diagram: np.ndarray = Field(..., description="Birth-death pairs")
+    confidence: float = Field(0.0, ge=0.0, le=1.0, description="Confidence score")
+    
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class TDARequest(BaseModel):
@@ -110,11 +127,10 @@ class TDARequest(BaseModel):
         description="Client identifier for tracking"
     )
     
-    @field_validator('data')
-    @classmethod
-    def validate_data_structure(cls, v, info):
+    @validator('data')
+    def validate_data_structure(cls, v, values):
         """Validate data structure based on format."""
-        data_format = info.data.get('data_format') if info.data else None
+        data_format = values.get('data_format')
         
         if data_format == DataFormat.POINT_CLOUD:
             if not isinstance(v, list) or not v:
@@ -137,18 +153,22 @@ class TDARequest(BaseModel):
         
         return v
     
-    @model_validator(mode='after')
-    def validate_algorithm_compatibility(self):
+    @root_validator
+    def validate_algorithm_compatibility(cls, values):
         """Validate algorithm and data format compatibility."""
         # GPU algorithms require compatible data formats
-        if self.algorithm == TDAAlgorithm.SIMBA_GPU and not self.use_gpu:
+        algorithm = values.get('algorithm')
+        use_gpu = values.get('use_gpu')
+        data_format = values.get('data_format')
+        
+        if algorithm == TDAAlgorithm.SIMBA_GPU and not use_gpu:
             raise ValueError("SimBa GPU algorithm requires GPU acceleration")
         
         # Streaming algorithms require time series data
-        if self.algorithm == TDAAlgorithm.STREAMING_TDA and self.data_format != DataFormat.TIME_SERIES:
+        if algorithm == TDAAlgorithm.STREAMING_TDA and data_format != DataFormat.TIME_SERIES:
             raise ValueError("Streaming TDA requires time series data format")
         
-        return self
+        return values
 
 
 class PersistenceDiagram(BaseModel):
@@ -165,8 +185,7 @@ class PersistenceDiagram(BaseModel):
         description="Birth-death intervals as [birth, death] pairs"
     )
     
-    @field_validator('intervals')
-    @classmethod
+    @validator('intervals')
     def validate_intervals(cls, v):
         """Validate persistence intervals."""
         for interval in v:
@@ -323,17 +342,20 @@ class TDAResponse(BaseModel):
         description="Detailed resource usage statistics"
     )
     
-    @model_validator(mode='after')
-    def validate_diagrams_consistency(self):
+    @root_validator
+    def validate_diagrams_consistency(cls, values):
         """Validate consistency between diagrams and betti numbers."""
-        if len(self.persistence_diagrams) != len(self.betti_numbers):
+        persistence_diagrams = values.get('persistence_diagrams', [])
+        betti_numbers = values.get('betti_numbers', [])
+        
+        if len(persistence_diagrams) != len(betti_numbers):
             raise ValueError("Number of persistence diagrams must match number of Betti numbers")
         
-        for i, (diagram, betti) in enumerate(zip(self.persistence_diagrams, self.betti_numbers)):
+        for i, (diagram, betti) in enumerate(zip(persistence_diagrams, betti_numbers)):
             if diagram.dimension != i:
                 raise ValueError(f"Diagram dimension {diagram.dimension} doesn't match index {i}")
         
-        return self
+        return values
 
 
 class TDAConfiguration(BaseModel):

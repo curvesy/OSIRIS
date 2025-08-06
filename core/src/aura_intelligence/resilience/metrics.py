@@ -7,7 +7,7 @@ OpenTelemetry integration and real-time dashboards.
 
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict, deque
 import asyncio
 import structlog
@@ -118,7 +118,7 @@ class ResilienceMetrics:
         
         # Store time series
         self.time_series[f"cb_{breaker_name}_state"].append({
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(timezone.utc),
             "state": state,
             "failure_rate": failure_rate
         })
@@ -143,7 +143,7 @@ class ResilienceMetrics:
         
         # Store time series
         self.time_series[f"bh_{bulkhead_name}_metrics"].append({
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(timezone.utc),
             "utilization": utilization,
             "queue_depth": queue_depth,
             "rejected": rejected
@@ -234,7 +234,7 @@ class ResilienceMetrics:
         for key, values in self.time_series.items():
             if key.startswith("cb_") and key.endswith("_state"):
                 recent = [v for v in values if 
-                         datetime.utcnow() - v["timestamp"] < timedelta(minutes=5)]
+                         datetime.now(timezone.utc) - v["timestamp"] < timedelta(minutes=5)]
                 recent_states.extend(recent)
         
         if not recent_states:
@@ -254,7 +254,7 @@ class ResilienceMetrics:
         for key, values in self.time_series.items():
             if key.startswith("bh_") and key.endswith("_metrics"):
                 recent = [v for v in values if 
-                         datetime.utcnow() - v["timestamp"] < timedelta(minutes=5)]
+                         datetime.now(timezone.utc) - v["timestamp"] < timedelta(minutes=5)]
                 recent_metrics.extend(recent)
         
         if not recent_metrics:
@@ -290,13 +290,13 @@ class ResilienceMetrics:
         key = f"timeout_{operation}"
         
         self.time_series[key].append({
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(timezone.utc),
             "timed_out": timed_out
         })
         
         # Calculate rate for last minute
         recent = [v for v in self.time_series[key] if 
-                 datetime.utcnow() - v["timestamp"] < timedelta(minutes=1)]
+                 datetime.now(timezone.utc) - v["timestamp"] < timedelta(minutes=1)]
         
         if recent:
             timeout_count = sum(1 for v in recent if v["timed_out"])
@@ -368,7 +368,7 @@ class ResilienceMetrics:
         for key, values in self.time_series.items():
             if key.startswith("timeout_") and values:
                 recent = [v for v in values if 
-                         datetime.utcnow() - v["timestamp"] < timedelta(minutes=1)]
+                         datetime.now(timezone.utc) - v["timestamp"] < timedelta(minutes=1)]
                 if recent:
                     timeout_count = sum(1 for v in recent if v["timed_out"])
                     rate = timeout_count / len(recent) * 100

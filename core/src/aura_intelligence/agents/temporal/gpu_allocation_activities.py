@@ -6,7 +6,7 @@ including LNN council voting, cost calculation, and resource allocation.
 """
 
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import uuid
 from dataclasses import dataclass
@@ -143,7 +143,7 @@ async def create_council_task(request: GPURequest, cost_info: Dict[str, Any]) ->
                 "cost_per_hour": cost_info["cost_per_hour"],
                 "estimated_cost": cost_info["estimated_cost"]
             },
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
         
         logger.info(
@@ -351,7 +351,7 @@ async def store_decision_in_neo4j(decision: AllocationResult) -> Dict[str, Any]:
                 "estimated_cost": decision.estimated_cost,
                 "consensus_achieved": decision.consensus_achieved,
                 "reason": decision.reason,
-                "created_at": datetime.utcnow().isoformat()
+                "created_at": datetime.now(timezone.utc).isoformat()
             })
             
             await neo4j.close()
@@ -396,7 +396,7 @@ async def publish_allocation_event(decision: AllocationResult) -> Dict[str, Any]
                 "allocated_gpus": decision.allocated_gpus,
                 "cost_per_hour": decision.cost_per_hour,
                 "estimated_cost": decision.estimated_cost,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
             
             # Publish event
@@ -435,7 +435,7 @@ async def allocate_gpus(decision: AllocationResult) -> Dict[str, Any]:
                 "allocated": True,
                 "allocation_id": decision.allocation_id,
                 "gpu_ids": decision.allocated_gpus,
-                "start_time": datetime.utcnow().isoformat(),
+                "start_time": datetime.now(timezone.utc).isoformat(),
                 "status": "active"
             }
             
@@ -468,7 +468,7 @@ async def deallocate_gpus(allocation_id: str) -> Dict[str, Any]:
             result = {
                 "deallocated": True,
                 "allocation_id": allocation_id,
-                "end_time": datetime.utcnow().isoformat(),
+                "end_time": datetime.now(timezone.utc).isoformat(),
                 "status": "completed"
             }
             
@@ -502,7 +502,7 @@ async def record_metrics(decision: AllocationResult, duration_ms: float) -> Dict
             "estimated_cost": decision.estimated_cost,
             "consensus_achieved": decision.consensus_achieved,
             "vote_count": len(decision.council_votes) if decision.council_votes else 0,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
         logger.info(

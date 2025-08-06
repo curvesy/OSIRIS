@@ -6,7 +6,7 @@ Manages API keys and external service configurations securely.
 
 from typing import Optional
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, validator, SecretStr
 
 from .base import BaseSettings
 
@@ -115,8 +115,7 @@ class APISettings(BaseSettings):
         description="API request timeout in seconds"
     )
     
-    @field_validator("openai_model")
-    @classmethod
+    @validator("openai_model")
     def validate_openai_model(cls, v: str) -> str:
         """Validate OpenAI model selection."""
         allowed_prefixes = {"gpt-3.5", "gpt-4", "text-embedding"}

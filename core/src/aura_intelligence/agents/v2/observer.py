@@ -9,7 +9,7 @@ Enhanced observer agent with:
 """
 
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 
 from langgraph.graph import StateGraph, END
@@ -106,7 +106,7 @@ class ObserverAgentV2(AgentBase[Dict[str, Any], Dict[str, Any], AgentState]):
         )
         
         context = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "observer_id": state.agent_id,
             "previous_observations": []
         }
@@ -136,7 +136,7 @@ class ObserverAgentV2(AgentBase[Dict[str, Any], Dict[str, Any], AgentState]):
         state.messages.append({
             "role": "system",
             "content": f"Context gathered: {len(context['previous_observations'])} previous observations",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
         
         return state
@@ -214,7 +214,7 @@ class ObserverAgentV2(AgentBase[Dict[str, Any], Dict[str, Any], AgentState]):
         state.messages.append({
             "role": "assistant",
             "content": f"System observation complete. Found {len(observations['anomalies'])} anomalies.",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
         
         # Record metrics
@@ -278,7 +278,7 @@ class ObserverAgentV2(AgentBase[Dict[str, Any], Dict[str, Any], AgentState]):
         state.messages.append({
             "role": "assistant",
             "content": f"Pattern detection complete. Found {len(patterns)} patterns.",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
         
         return state
@@ -342,7 +342,7 @@ class ObserverAgentV2(AgentBase[Dict[str, Any], Dict[str, Any], AgentState]):
         state.messages.append({
             "role": "assistant",
             "content": "Observations enriched with historical context and predictions",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
         
         return state
@@ -369,7 +369,7 @@ class ObserverAgentV2(AgentBase[Dict[str, Any], Dict[str, Any], AgentState]):
             "recommendations": [],
             "metadata": {
                 "observer_id": state.agent_id,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "observation_duration_ms": 1250  # Mock
             }
         }
@@ -401,9 +401,9 @@ class ObserverAgentV2(AgentBase[Dict[str, Any], Dict[str, Any], AgentState]):
                 await self.kg_client.create_node(
                     "Observation",
                     {
-                        "id": f"obs_{state.agent_id}_{datetime.utcnow().timestamp()}",
+                        "id": f"obs_{state.agent_id}_{datetime.now(timezone.utc).timestamp()}",
                         "observer_id": state.agent_id,
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "status": report["summary"]["status"],
                         "anomaly_count": report["summary"]["anomaly_count"],
                         "pattern_count": report["summary"]["pattern_count"]
@@ -418,7 +418,7 @@ class ObserverAgentV2(AgentBase[Dict[str, Any], Dict[str, Any], AgentState]):
         state.messages.append({
             "role": "assistant",
             "content": f"Observation complete. Status: {report['summary']['status']}",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
         
         # Record final metrics
@@ -436,12 +436,12 @@ class ObserverAgentV2(AgentBase[Dict[str, Any], Dict[str, Any], AgentState]):
     def _create_initial_state(self, input_data: Dict[str, Any]) -> AgentState:
         """Create initial state from input."""
         return AgentState(
-            agent_id=f"{self.config.name}_{datetime.utcnow().timestamp()}",
+            agent_id=f"{self.config.name}_{datetime.now(timezone.utc).timestamp()}",
             context={"input_data": input_data},
             messages=[{
                 "role": "user",
                 "content": input_data.get("query", "Perform system observation"),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }]
         )
     

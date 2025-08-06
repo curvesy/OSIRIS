@@ -20,7 +20,7 @@ TDA Integration:
 
 from typing import Dict, Any, List, Optional, Callable, Union
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass, asdict
 from enum import Enum
 import uuid
@@ -108,7 +108,7 @@ class SagaOrchestrator:
                     "tda.correlation_id": tda_correlation_id or "none"
                 })
         
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         self.active_sagas[saga_id] = steps
         executed_steps = []
         
@@ -121,7 +121,7 @@ class SagaOrchestrator:
             # Execute steps sequentially
             for step in steps:
                 step.status = SagaStepStatus.EXECUTING
-                step.execution_time = datetime.utcnow()
+                step.execution_time = datetime.now(timezone.utc)
                 
                 try:
                     # Execute step with TDA context
@@ -148,7 +148,7 @@ class SagaOrchestrator:
                     raise Exception(f"Saga {saga_id} failed at step {step.name}: {str(e)}")
             
             # Saga completed successfully
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             
             result = {
                 "saga_id": saga_id,
@@ -171,7 +171,7 @@ class SagaOrchestrator:
             
         except Exception as e:
             # Saga failed, record failure
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             
             result = {
                 "saga_id": saga_id,
@@ -249,7 +249,7 @@ class SagaOrchestrator:
             if step.compensation_action:
                 try:
                     step.status = SagaStepStatus.COMPENSATING
-                    step.compensation_time = datetime.utcnow()
+                    step.compensation_time = datetime.now(timezone.utc)
                     
                     # Prepare compensation input
                     compensation_input = {

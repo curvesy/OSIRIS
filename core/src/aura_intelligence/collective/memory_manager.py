@@ -8,7 +8,7 @@ Handles context retrieval and continuous learning.
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 import sys
@@ -128,7 +128,7 @@ class CollectiveMemoryManager:
                 content=json.dumps(workflow_summary),
                 metadata={
                     "workflow_type": "collective_intelligence",
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "agent_version": "production_v1.0",
                     "namespace": self.namespace
                 }
@@ -197,8 +197,8 @@ class CollectiveMemoryManager:
             evidence_count = len(getattr(final_state, 'evidence_entries', []))
             
             # Calculate processing time
-            created_at = getattr(final_state, 'created_at', datetime.utcnow())
-            updated_at = getattr(final_state, 'updated_at', datetime.utcnow())
+            created_at = getattr(final_state, 'created_at', datetime.now(timezone.utc))
+            updated_at = getattr(final_state, 'updated_at', datetime.now(timezone.utc))
             processing_time = (updated_at - created_at).total_seconds()
             
             return {
@@ -207,7 +207,7 @@ class CollectiveMemoryManager:
                 "evidence_count": evidence_count,
                 "processing_time_seconds": processing_time,
                 "success": str(status) == "TaskStatus.COMPLETED",
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "patterns": self._extract_patterns(final_state),
                 "lessons_learned": ["workflow_completed_successfully"]
             }

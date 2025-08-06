@@ -7,7 +7,7 @@ existing context management systems (Neo4j, Mem0, Kafka).
 
 from typing import Optional, Dict, List, Any, Tuple
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 import logging
 import numpy as np
@@ -105,15 +105,15 @@ class ContextAwareLNN:
             span.set_attribute("enriched.shape", str(enriched_input.shape))
             
             # 3. Run LNN inference
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
             output, hidden_states = self.lnn(enriched_input)
-            inference_time = (datetime.utcnow() - start_time).total_seconds()
+            inference_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             span.set_attribute("inference.latency_ms", inference_time * 1000)
             
             # 4. Post-process with context
             result = self._post_process(output, context, hidden_states)
             result["inference_metadata"] = {
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "latency_ms": inference_time * 1000,
                 "context_used": len(context.historical_patterns) > 0,
                 "model_version": self.lnn.config.version if hasattr(self.lnn.config, 'version') else "1.0"
@@ -142,7 +142,7 @@ class ContextAwareLNN:
         cache_key = self._compute_cache_key(input_data, query_context)
         if cache_key in self._context_cache:
             cached = self._context_cache[cache_key]
-            if (datetime.utcnow() - cached["timestamp"]).total_seconds() < self._cache_ttl:
+            if (datetime.now(timezone.utc) - cached["timestamp"]).total_seconds() < self._cache_ttl:
                 return cached["context"]
         
         try:
@@ -173,7 +173,7 @@ class ContextAwareLNN:
             # Update cache
             self._context_cache[cache_key] = {
                 "context": context,
-                "timestamp": datetime.utcnow()
+                "timestamp": datetime.now(timezone.utc)
             }
             
         except Exception as e:
@@ -313,7 +313,7 @@ class ContextAwareLNN:
                     memory_type="decision",
                     content=result,
                     metadata={
-                        "timestamp": datetime.utcnow(),
+                        "timestamp": datetime.now(timezone.utc),
                         "confidence": result.get("confidence", 0.0),
                         "context_influence": result.get("context_influence", 0.0)
                     }
@@ -332,7 +332,7 @@ class ContextAwareLNN:
         try:
             event = {
                 "event_type": "lnn.decision",
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "agent_id": "context_aware_lnn",
                 "decision": result,
                 "metadata": {
@@ -368,7 +368,7 @@ class ContextAwareLNN:
         # Recency score based on decision age
         if context.recent_decisions:
             latest = context.recent_decisions[0]
-            age_hours = (datetime.utcnow() - latest.get("timestamp", datetime.utcnow())).total_seconds() / 3600
+            age_hours = (datetime.now(timezone.utc) - latest.get("timestamp", datetime.now(timezone.utc))).total_seconds() / 3600
             scores["recency"] = max(0.0, 1.0 - (age_hours / 24.0))
         else:
             scores["recency"] = 0.0

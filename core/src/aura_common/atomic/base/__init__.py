@@ -1,33 +1,28 @@
-"""Base classes and protocols for atomic components."""
+"""
+Base atomic components package
+"""
 
-from .component import AtomicComponent, ComponentMetrics
-from .protocols import (
-    ProcessorProtocol,
-    ConnectorProtocol,
-    HandlerProtocol,
-    ConfigProtocol
-)
+# Re-export exceptions from the exceptions module
 from .exceptions import (
     ComponentError,
-    ConfigurationError,
-    ProcessingError,
-    ValidationError
+    ComponentInitializationError,
+    ComponentProcessingError,
+    ComponentCleanupError,
+    ComponentTimeoutError,
+    ComponentValidationError,
+    ComponentConfigurationError
 )
 
+# Re-export base component
+from .component import AtomicComponent
+
 __all__ = [
-    # Base classes
     "AtomicComponent",
-    "ComponentMetrics",
-    
-    # Protocols
-    "ProcessorProtocol",
-    "ConnectorProtocol",
-    "HandlerProtocol",
-    "ConfigProtocol",
-    
-    # Exceptions
     "ComponentError",
-    "ConfigurationError",
-    "ProcessingError",
-    "ValidationError"
+    "ComponentInitializationError",
+    "ComponentProcessingError",
+    "ComponentCleanupError",
+    "ComponentTimeoutError",
+    "ComponentValidationError",
+    "ComponentConfigurationError"
 ]

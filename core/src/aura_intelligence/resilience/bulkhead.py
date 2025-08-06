@@ -12,7 +12,7 @@ Features:
 
 from typing import Dict, Any, Optional, List, Callable, TypeVar, Generic
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum, IntEnum
 import asyncio
 from asyncio import Queue, Semaphore
@@ -139,7 +139,7 @@ class ResourcePool:
         self.lock = asyncio.Lock()
         
         # Scaling state
-        self.last_scale_time = datetime.utcnow()
+        self.last_scale_time = datetime.now(timezone.utc)
         self.scaling_history = deque(maxlen=100)
         
         # Utilization tracking
@@ -177,13 +177,13 @@ class ResourcePool:
             
             # Record scaling event
             self.scaling_history.append({
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(timezone.utc),
                 "old_capacity": old_capacity,
                 "new_capacity": new_capacity,
                 "factor": factor
             })
             
-            self.last_scale_time = datetime.utcnow()
+            self.last_scale_time = datetime.now(timezone.utc)
             self._update_metrics()
             
             logger.info(
@@ -225,7 +225,7 @@ class ResourcePool:
     
     def _can_scale(self) -> bool:
         """Check if scaling cooldown has passed."""
-        time_since_scale = datetime.utcnow() - self.last_scale_time
+        time_since_scale = datetime.now(timezone.utc) - self.last_scale_time
         return time_since_scale > self.config.scale_cooldown
     
     def _update_metrics(self):
@@ -273,7 +273,7 @@ class PriorityQueue(Generic[T]):
                 
                 item = await queue.get()
                 self.total_size -= 1
-                self.last_served[priority] = datetime.utcnow()
+                self.last_served[priority] = datetime.now(timezone.utc)
                 return item
         
         # If all queues empty, wait on highest priority
@@ -291,7 +291,7 @@ class PriorityQueue(Generic[T]):
         if not last_time:
             return False
         
-        time_since = datetime.utcnow() - last_time
+        time_since = datetime.now(timezone.utc) - last_time
         return time_since < timedelta(seconds=1)
     
     def qsize(self) -> int:
@@ -424,7 +424,7 @@ class DynamicBulkhead:
         if not request:
             # Create default request
             request = ResourceRequest(
-                id=f"req-{datetime.utcnow().timestamp()}",
+                id=f"req-{datetime.now(timezone.utc).timestamp()}",
                 operation_name=operation.__name__,
                 resources={ResourceType.AGENT_SLOT: 1.0}
             )
@@ -445,7 +445,7 @@ class DynamicBulkhead:
             raise BulkheadRejectedException(f"Request {request.id} timed out waiting for resources")
         
         # Execute with resources
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         try:
             # Update metrics
             bulkhead_active.set(1, {"bulkhead": self.name})
@@ -455,7 +455,7 @@ class DynamicBulkhead:
             
             # Track cost
             if self.config.cost_aware:
-                duration = (datetime.utcnow() - start_time).total_seconds()
+                duration = (datetime.now(timezone.utc) - start_time).total_seconds()
                 await self.cost_tracker.record_usage(request, duration)
             
             return result
@@ -546,7 +546,7 @@ class DynamicBulkhead:
         """Queue request for later execution."""
         queue_entry = QueueEntry(
             request=request,
-            enqueue_time=datetime.utcnow(),
+            enqueue_time=datetime.now(timezone.utc),
             future=asyncio.Future()
         )
         
@@ -614,7 +614,7 @@ class DynamicBulkhead:
     
     async def _publish_execution_event(self, request: ResourceRequest, start_time: datetime):
         """Publish execution event to Kafka."""
-        duration = (datetime.utcnow() - start_time).total_seconds()
+        duration = (datetime.now(timezone.utc) - start_time).total_seconds()
         
         # Import here to avoid circular imports
         from aura_intelligence.events.schemas import SystemEvent, EventType
@@ -681,13 +681,13 @@ class CostTracker:
         async with self.lock:
             cost = request.cost_estimate * (duration / 60.0)  # Per minute
             self.usage_history.append({
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(timezone.utc),
                 "cost": cost
             })
     
     def get_current_rate(self) -> float:
         """Get current cost rate per minute."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         recent_costs = [
             entry["cost"]
             for entry in self.usage_history

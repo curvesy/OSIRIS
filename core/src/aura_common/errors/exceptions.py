@@ -4,7 +4,7 @@ Well-structured exceptions with rich context.
 """
 
 from typing import Optional, Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timezone
 import traceback
 import json
 
@@ -48,7 +48,7 @@ class AuraError(Exception):
         self.cause = cause
         self.correlation_id = correlation_id
         self.suggestions = suggestions or []
-        self.timestamp = datetime.utcnow()
+        self.timestamp = datetime.now(timezone.utc)
         self.traceback = traceback.format_exc()
         
         # Auto-populate correlation ID if available
@@ -259,6 +259,93 @@ class StateError(AuraError):
         super().__init__(
             message,
             error_code='STATE_ERROR',
+            details=details,
+            **kwargs
+        )
+
+
+class TDAError(AuraError):
+    """
+    Topological Data Analysis error.
+    
+    Raised when TDA operations fail.
+    """
+    
+    def __init__(
+        self,
+        message: str,
+        algorithm: Optional[str] = None,
+        data_shape: Optional[tuple] = None,
+        **kwargs
+    ):
+        """Initialize with TDA context."""
+        details = kwargs.pop('details', {})
+        if algorithm:
+            details['algorithm'] = algorithm
+        if data_shape:
+            details['data_shape'] = data_shape
+            
+        super().__init__(
+            message,
+            error_code='TDA_ERROR',
+            details=details,
+            **kwargs
+        )
+
+
+class AgentError(AuraError):
+    """
+    Agent-related error.
+    
+    Raised when agent operations fail.
+    """
+    
+    def __init__(
+        self,
+        message: str,
+        agent_id: Optional[str] = None,
+        agent_type: Optional[str] = None,
+        **kwargs
+    ):
+        """Initialize with agent context."""
+        details = kwargs.pop('details', {})
+        if agent_id:
+            details['agent_id'] = agent_id
+        if agent_type:
+            details['agent_type'] = agent_type
+            
+        super().__init__(
+            message,
+            error_code='AGENT_ERROR',
+            details=details,
+            **kwargs
+        )
+
+
+class OrchestrationError(AuraError):
+    """
+    Orchestration-related error.
+    
+    Raised when orchestration operations fail.
+    """
+    
+    def __init__(
+        self,
+        message: str,
+        workflow_id: Optional[str] = None,
+        step: Optional[str] = None,
+        **kwargs
+    ):
+        """Initialize with orchestration context."""
+        details = kwargs.pop('details', {})
+        if workflow_id:
+            details['workflow_id'] = workflow_id
+        if step:
+            details['step'] = step
+            
+        super().__init__(
+            message,
+            error_code='ORCHESTRATION_ERROR',
             details=details,
             **kwargs
         )

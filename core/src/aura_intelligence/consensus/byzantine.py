@@ -12,7 +12,7 @@ Tolerates up to f Byzantine failures in 3f+1 nodes.
 
 from typing import Dict, Any, Optional, List, Set, Protocol
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 import hashlib
 import structlog
@@ -533,7 +533,7 @@ class BFTCore:
             "detected_by": self.node_id,
             "byzantine_node": node_id,
             "reason": reason,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
     
     async def _validate_proposal(self, proposal: Dict[str, Any]) -> bool:

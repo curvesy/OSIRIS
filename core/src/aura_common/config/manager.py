@@ -254,3 +254,20 @@ def update_feature_flag(flag: str, enabled: bool) -> None:
 def is_feature_enabled(flag: str) -> bool:
     """Check if a feature is enabled."""
     return _config_manager.is_feature_enabled(flag)
+
+
+def get_config_value(key: str, default: Any = None) -> Any:
+    """Get a configuration value by key."""
+    config = get_config()
+    parts = key.split('.')
+    value = config
+    
+    for part in parts:
+        if hasattr(value, part):
+            value = getattr(value, part)
+        elif isinstance(value, dict) and part in value:
+            value = value[part]
+        else:
+            return default
+            
+    return value

@@ -6,12 +6,22 @@ Professional orchestration of the 7-agent collective intelligence system.
 import asyncio
 import logging
 from datetime import datetime
-from typing import Dict, Any, List, TypedDict, Annotated
+from typing import Dict, Any, List, TypedDict, Annotated, Optional
 import operator
+
+
+class CollectiveState(TypedDict):
+    """State for collective intelligence workflow."""
+    messages: List[Dict[str, Any]]
+    current_agent: str
+    workflow_id: str
+    anomaly_score: float
+    decision: Optional[Dict[str, Any]]
+    metadata: Dict[str, Any]
 
 from langgraph.graph import StateGraph, END
 try:
-    from langgraph.prebuilt import ToolExecutor
+    from langgraph.prebuilt import ToolNode as ToolExecutor
 except ImportError:
     # Fallback for older LangGraph versions
     ToolExecutor = None
@@ -19,7 +29,7 @@ except ImportError:
 # Import existing agents
 from ..agents.observer.agent import ObserverAgent
 from ..agents.analyst.agent import AnalystAgent
-from ..agents.supervisor import MemoryAwareSupervisor
+from ..agents.supervisor import Supervisor as MemoryAwareSupervisor
 from ..integrations.mojo_tda_bridge import MojoTDABridge
 
 logger = logging.getLogger(__name__)
@@ -402,3 +412,46 @@ class AURACollectiveIntelligence:
                 'error': str(e),
                 'partial_result': initial_state
             }
+
+
+class LangGraphWorkflowOrchestrator:
+    """Main orchestrator for LangGraph workflows."""
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        """Initialize the orchestrator."""
+        self.config = config or {}
+        self.logger = logging.getLogger(__name__)
+        
+    def create_workflow(self):
+        """Create and return the configured workflow."""
+        # This is a simplified version - in production, this would
+        # create the full graph with all agents
+        graph = StateGraph(CollectiveState)
+        
+        # Add a simple start node
+        graph.add_node("start", lambda state: state)
+        graph.set_entry_point("start")
+        graph.add_edge("start", END)
+        
+        return graph.compile()
+    
+    async def execute(self, initial_state: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute the workflow with given initial state."""
+        workflow = self.create_workflow()
+        result = await workflow.ainvoke(initial_state)
+        return result
+
+
+def create_collective_intelligence_workflow(config: Optional[Dict[str, Any]] = None):
+    """
+    Create a collective intelligence workflow.
+    
+    Args:
+        config: Optional configuration
+        
+    Returns:
+        Configured workflow
+    """
+    workflow_config = config or {}
+    orchestrator = LangGraphWorkflowOrchestrator(workflow_config)
+    return orchestrator.create_workflow()

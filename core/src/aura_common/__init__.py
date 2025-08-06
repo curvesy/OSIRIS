@@ -1,35 +1,44 @@
 """
-🔧 AURA Common Libraries
-Shared utilities and cross-cutting concerns for AURA Intelligence.
+AURA Common Utilities
 
-This package provides:
-- Structured logging with correlation
-- Error handling and recovery
-- Configuration management
-- Cryptographic utilities
-- State management patterns
-- Validation helpers
+Shared utilities and components for AURA Intelligence system.
 """
 
-from .logging import get_logger, get_correlation_id, with_correlation_id
-from .errors import AuraError, CircuitBreaker, resilient_operation
-from .config import AuraConfig, ConfigManager, get_config
+__version__ = "0.1.0"
 
-__version__ = "2.0.0"
+from .logging import get_logger, with_correlation_id
+from .atomic import AtomicComponent, ComponentError
+from .errors import (
+    AuraError,
+    TDAError,
+    AgentError,
+    OrchestrationError,
+    ConfigurationError,
+    ValidationError
+)
+# Import resilient_operation from error_utils.py
+from .error_utils import resilient_operation
+from .config import is_feature_enabled, get_config_value
 
 __all__ = [
     # Logging
     "get_logger",
-    "get_correlation_id", 
     "with_correlation_id",
     
-    # Errors
-    "AuraError",
-    "CircuitBreaker",
-    "resilient_operation",
+    # Atomic components
+    "AtomicComponent",
+    "ComponentError",
     
-    # Config
-    "AuraConfig",
-    "ConfigManager",
-    "get_config",
+    # Error handling
+    "AuraError",
+    "resilient_operation",
+    "TDAError",
+    "AgentError",
+    "OrchestrationError",
+    "ConfigurationError",
+    "ValidationError",
+    
+    # Configuration
+    "is_feature_enabled",
+    "get_config_value",
 ]

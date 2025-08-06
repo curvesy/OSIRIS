@@ -22,7 +22,7 @@ TDA Integration:
 from typing import Dict, Any, List, Optional, Union
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, asdict
 from enum import Enum
 import uuid
@@ -219,7 +219,7 @@ class DistributedCoordinator:
                     "plan.crewai_flows": len(plan.crewai_flows)
                 })
         
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         self.coordination_metrics["total_executions"] += 1
         
         try:
@@ -240,7 +240,7 @@ class DistributedCoordinator:
             await self._create_cross_service_checkpoint(plan, "post_execution", results)
             
             # Calculate execution time
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             
             # Update metrics
             self.coordination_metrics["successful_executions"] += 1
@@ -272,7 +272,7 @@ class DistributedCoordinator:
             }
             
         except Exception as e:
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             self.coordination_metrics["failed_executions"] += 1
             
             # Attempt recovery
@@ -619,7 +619,7 @@ class DistributedCoordinator:
                 "plan_execution_mode": plan.execution_mode.value,
                 "results": results
             },
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             services_involved=self._get_involved_services(plan),
             tda_correlation_id=plan.tda_correlation_id
         )

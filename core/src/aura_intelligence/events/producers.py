@@ -10,7 +10,7 @@ Implements various producer patterns:
 
 from typing import Dict, Any, Optional, List, Callable, Union
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 import json
 from contextlib import asynccontextmanager
@@ -178,7 +178,7 @@ class EventProducer:
                 "event.id": event.event_id
             }
         ) as span:
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
             
             try:
                 # Convert event to Kafka format
@@ -207,7 +207,7 @@ class EventProducer:
                 )
                 
                 # Record metrics
-                duration = (datetime.utcnow() - start_time).total_seconds() * 1000
+                duration = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                 produce_latency.record(
                     duration,
                     {"topic": topic, "event_type": event.event_type.value}

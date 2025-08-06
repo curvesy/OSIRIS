@@ -4,14 +4,14 @@ Evidence collection and system observation for workflows.
 """
 
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 
 from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.runnables import RunnableConfig
 
 from aura_common.logging import get_logger, with_correlation_id
-from aura_common.errors import resilient_operation
+from aura_common import resilient_operation
 from aura_common.config import is_feature_enabled
 
 from ..state import CollectiveState, NodeResult, update_state_safely
@@ -42,9 +42,9 @@ class ObserverNode:
     
     @with_correlation_id()
     @resilient_operation(
-        "observer_node",
-        failure_threshold=3,
-        recovery_timeout=30
+        max_retries=3,
+        delay=1.0,
+        backoff_factor=2.0
     )
     async def __call__(
         self,
@@ -128,7 +128,7 @@ class ObserverNode:
                 "error_log": [{
                     "node": self.name,
                     "error": str(e),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }],
                 "last_error": {
                     "node": self.name,
@@ -148,7 +148,7 @@ class ObserverNode:
         evidence.append({
             "type": "system_metrics",
             "data": self._get_system_health(),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
         
         # Message history analysis
@@ -159,7 +159,7 @@ class ObserverNode:
                     "message_count": len(state["messages"]),
                     "last_message": state["messages"][-1].content[:100]
                 },
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             })
         
         # Previous decisions
@@ -170,7 +170,7 @@ class ObserverNode:
                     "decision_count": len(state["supervisor_decisions"]),
                     "last_decision": state["supervisor_decisions"][-1]
                 },
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             })
         
         # Error patterns
@@ -181,7 +181,7 @@ class ObserverNode:
                     "error_count": len(state["error_log"]),
                     "recovery_attempts": state["error_recovery_attempts"]
                 },
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             })
         
         return evidence
@@ -218,7 +218,7 @@ class ObserverNode:
             
             return {
                 "summary": response.content,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
             
         except Exception as e:
@@ -236,7 +236,7 @@ class ObserverNode:
         """Build observation from evidence and analysis."""
         observation = {
             "node": self.name,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "evidence": evidence,
             "evidence_count": len(evidence)
         }
@@ -271,7 +271,7 @@ class ObserverNode:
             "active_connections": 42,
             "error_rate": 0.02,
             "status": "healthy",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
 

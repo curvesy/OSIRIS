@@ -8,7 +8,7 @@ through controlled failure injection and recovery validation.
 import asyncio
 import random
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Callable
 from uuid import uuid4
 
@@ -64,7 +64,7 @@ class ChaosExperiment(ABC):
             id=self.id
         )
         
-        self.start_time = datetime.utcnow()
+        self.start_time = datetime.now(timezone.utc)
         chaos_experiments_run.labels(
             experiment_type=self.name,
             target="system"
@@ -117,7 +117,7 @@ class ChaosExperiment(ABC):
             # Always cleanup
             chaos_injection_active.labels(injection_type=self.name).set(0)
             await self.cleanup()
-            self.end_time = datetime.utcnow()
+            self.end_time = datetime.now(timezone.utc)
             
         # Generate report
         return self._generate_report()
@@ -126,7 +126,7 @@ class ChaosExperiment(ABC):
         """Capture system steady state metrics"""
         # Override in subclasses for specific metrics
         return {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "status": "captured"
         }
     

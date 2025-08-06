@@ -8,7 +8,7 @@ and outcomes to build training data for the PredictiveDecisionEngine.
 import asyncio
 import logging
 from typing import Optional, Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from ...observability.shadow_mode_logger import ShadowModeLogger, ShadowModeEntry
@@ -70,7 +70,7 @@ async def log_shadow_mode_prediction(
         # Create shadow mode entry
         entry = ShadowModeEntry(
             workflow_id=state["workflow_id"],
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             state_snapshot={
                 "evidence_count": len(state.get("evidence_log", [])),
                 "current_step": state.get("current_step", "unknown"),

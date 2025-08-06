@@ -8,7 +8,7 @@ import json
 import hashlib
 from typing import Dict, Any, Optional, List, Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 import structlog
@@ -46,7 +46,7 @@ class FeatureFlag:
     
     def is_active(self) -> bool:
         """Check if flag is within active date range"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if self.start_date and now < self.start_date:
             return False
         if self.end_date and now > self.end_date:
@@ -161,7 +161,7 @@ class FeatureFlagManager:
             # Gradual rollout based on time
             if not flag.start_date:
                 return True
-            days_active = (datetime.utcnow() - flag.start_date).days
+            days_active = (datetime.now(timezone.utc) - flag.start_date).days
             target_percentage = min(days_active * 10, 100)  # 10% per day
             return self._evaluate_flag(
                 FeatureFlag(

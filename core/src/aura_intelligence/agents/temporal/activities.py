@@ -6,7 +6,7 @@ the actual work and can be retried independently.
 """
 
 from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import asyncio
 from dataclasses import dataclass
@@ -56,7 +56,7 @@ class AgentActivity:
         span_context: Optional[str] = None
     ) -> Dict[str, Any]:
         """Execute agent processing with full observability."""
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         # Create span for activity
         with tracer.start_as_current_span(
@@ -101,7 +101,7 @@ class AgentActivity:
                 result = await circuit_breaker.call(process_with_agent)
                 
                 # Record success metrics
-                duration = (datetime.utcnow() - start_time).total_seconds() * 1000
+                duration = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                 activity_duration.record(
                     duration,
                     {
@@ -144,7 +144,7 @@ class AgentActivity:
         if agent_type == "observer":
             if use_v2:
                 return ObserverAgentV2(AgentConfig(
-                    name=f"observer_v2_{datetime.utcnow().timestamp()}",
+                    name=f"observer_v2_{datetime.now(timezone.utc).timestamp()}",
                     **config
                 ))
             else:
@@ -152,7 +152,7 @@ class AgentActivity:
                 
         elif agent_type == "analyst":
             return AnalystAgentV2(AgentConfig(
-                name=f"analyst_v2_{datetime.utcnow().timestamp()}",
+                name=f"analyst_v2_{datetime.now(timezone.utc).timestamp()}",
                 **config
             ))
             
@@ -160,7 +160,7 @@ class AgentActivity:
             # These would be specific search agents
             from ..v2.search import SearchAgentV2
             return SearchAgentV2(AgentConfig(
-                name=f"{agent_type}_v2_{datetime.utcnow().timestamp()}",
+                name=f"{agent_type}_v2_{datetime.now(timezone.utc).timestamp()}",
                 search_type=agent_type.replace("_search", ""),
                 **config
             ))
@@ -246,7 +246,7 @@ class StateManagementActivity:
                 messages=[{
                     "role": "system",
                     "content": "Agent workflow started",
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }]
             )
             
@@ -349,7 +349,7 @@ class KafkaProducerActivity:
                 producer = await KafkaProducerActivity._get_producer()
                 
                 # Add metadata
-                event["timestamp"] = datetime.utcnow().isoformat()
+                event["timestamp"] = datetime.now(timezone.utc).isoformat()
                 event["source"] = "temporal.activity"
                 
                 # Send to Kafka

@@ -6,7 +6,7 @@ Defines settings for memory management, vector stores, and caching.
 
 from typing import Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, validator
 
 from .base import BaseSettings
 
@@ -111,8 +111,7 @@ class MemorySettings(BaseSettings):
         description="Number of workers for parallel processing"
     )
     
-    @field_validator("vector_store_type")
-    @classmethod
+    @validator("vector_store_type")
     def validate_vector_store(cls, v: str) -> str:
         """Validate vector store type."""
         allowed = {"chroma", "pinecone", "weaviate", "faiss", "qdrant"}

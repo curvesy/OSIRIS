@@ -16,7 +16,8 @@ from .lnn import (
     ContinuousTimeRNN,
     EdgeLNN,
     LNNConfig,
-    LNNMetrics
+    LNNMetrics,
+    ODESolver
 )
 
 # Context integration - graceful import
@@ -59,6 +60,7 @@ __all__ = [
     "EdgeLNN",
     "LNNConfig",
     "LNNMetrics",
+    "ODESolver",
 ]
 
 # Add context components if available

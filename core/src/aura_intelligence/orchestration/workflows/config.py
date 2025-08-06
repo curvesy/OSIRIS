@@ -5,7 +5,7 @@ Uses Pydantic v2 for robust configuration validation and management.
 """
 
 from typing import Dict, Any, Optional, Literal
-from pydantic import BaseModel, Field, ConfigDict, field_validator
+from pydantic import BaseModel, Field, validator
 from langchain_core.runnables import RunnableConfig
 
 
@@ -16,21 +16,21 @@ class RiskThresholds(BaseModel):
     medium: float = Field(0.4, ge=0.0, le=1.0)
     low: float = Field(0.1, ge=0.0, le=1.0)
     
-    @field_validator('high')
+    @validator('high')
     def validate_high(cls, v: float, info) -> float:
         """Ensure high threshold is less than critical."""
         if 'critical' in info.data and v >= info.data['critical']:
             raise ValueError('high threshold must be less than critical')
         return v
     
-    @field_validator('medium')
+    @validator('medium')
     def validate_medium(cls, v: float, info) -> float:
         """Ensure medium threshold is less than high."""
         if 'high' in info.data and v >= info.data['high']:
             raise ValueError('medium threshold must be less than high')
         return v
     
-    @field_validator('low')
+    @validator('low')
     def validate_low(cls, v: float, info) -> float:
         """Ensure low threshold is less than medium."""
         if 'medium' in info.data and v >= info.data['medium']:
@@ -65,11 +65,6 @@ class WorkflowConfig(BaseModel):
     This configuration controls all aspects of the collective
     intelligence workflow behavior.
     """
-    model_config = ConfigDict(
-        extra='forbid',
-        validate_assignment=True,
-        use_enum_values=True
-    )
     
     # Model configuration
     models: ModelConfig = Field(default_factory=ModelConfig)

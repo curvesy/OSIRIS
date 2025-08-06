@@ -456,3 +456,113 @@ def create_metric_evidence(
             .with_freshness(1.0)
             .with_agent(agent_id, public_key)
             .build(private_key))
+
+
+# Agent builders for factory pattern using the new factory system
+class ObserverAgentBuilder:
+    """Builder for Observer agents using the factory system."""
+    
+    def __init__(self):
+        self.config = {
+            "name": "observer",
+            "model": "gpt-4",
+            "temperature": 0.0
+        }
+    
+    def with_model(self, model: str) -> 'ObserverAgentBuilder':
+        """Set the model for the agent."""
+        self.config["model"] = model
+        return self
+    
+    def with_temperature(self, temperature: float) -> 'ObserverAgentBuilder':
+        """Set the temperature for the agent."""
+        self.config["temperature"] = temperature
+        return self
+    
+    def with_metadata(self, metadata: Dict[str, Any]) -> 'ObserverAgentBuilder':
+        """Set metadata for the agent."""
+        self.config["metadata"] = metadata
+        return self
+    
+    def with_agent_id(self, agent_id: str) -> 'ObserverAgentBuilder':
+        """Set specific agent ID."""
+        self.config["agent_id"] = agent_id
+        return self
+    
+    def build(self):
+        """Build the Observer agent using the factory."""
+        from .agent_factory import create_observer_agent
+        return create_observer_agent(self.config)
+
+
+class AnalystAgentBuilder:
+    """Builder for Analyst agents using the factory system."""
+    
+    def __init__(self):
+        self.config = {
+            "name": "analyst",
+            "model": "gpt-4",
+            "temperature": 0.1
+        }
+    
+    def with_model(self, model: str) -> 'AnalystAgentBuilder':
+        """Set the model for the agent."""
+        self.config["model"] = model
+        return self
+    
+    def with_temperature(self, temperature: float) -> 'AnalystAgentBuilder':
+        """Set the temperature for the agent."""
+        self.config["temperature"] = temperature
+        return self
+    
+    def with_metadata(self, metadata: Dict[str, Any]) -> 'AnalystAgentBuilder':
+        """Set metadata for the agent."""
+        self.config["metadata"] = metadata
+        return self
+    
+    def with_agent_id(self, agent_id: str) -> 'AnalystAgentBuilder':
+        """Set specific agent ID."""
+        self.config["agent_id"] = agent_id
+        return self
+    
+    def build(self):
+        """Build the Analyst agent using the factory."""
+        from .agent_factory import create_analyst_agent
+        return create_analyst_agent(self.config)
+
+
+class SupervisorAgentBuilder:
+    """Builder for Supervisor agents using the factory system."""
+    
+    def __init__(self):
+        self.config = {
+            "name": "supervisor",
+            "model": "gpt-4",
+            "temperature": 0.0,
+            "tools": ["observer", "analyst", "validator", "tda_analyzer"]
+        }
+    
+    def with_model(self, model: str) -> 'SupervisorAgentBuilder':
+        """Set the model for the agent."""
+        self.config["model"] = model
+        return self
+    
+    def with_temperature(self, temperature: float) -> 'SupervisorAgentBuilder':
+        """Set the temperature for the agent."""
+        self.config["temperature"] = temperature
+        return self
+    
+    def with_metadata(self, metadata: Dict[str, Any]) -> 'SupervisorAgentBuilder':
+        """Set metadata for the agent."""
+        self.config["metadata"] = metadata
+        return self
+    
+    def with_tools(self, tools: List[str]) -> 'SupervisorAgentBuilder':
+        """Set the tools available to the supervisor."""
+        self.config["tools"] = tools
+        return self
+    
+    def build(self):
+        """Build the Supervisor agent using the factory."""
+        from .agent_factory import create_supervisor_agent
+        return create_supervisor_agent(self.config)

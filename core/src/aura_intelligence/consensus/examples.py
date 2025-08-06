@@ -5,7 +5,7 @@ Demonstrates when to use consensus vs. simpler coordination mechanisms.
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any
 
 from .types import ConsensusRequest, DecisionType
@@ -121,7 +121,7 @@ async def example_no_consensus_needed():
         "agent_id": "analyst-7",
         "decision_type": "analyze_document",
         "document_id": "doc-456",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
     
     # Just publish to Kafka, no consensus needed
@@ -201,7 +201,7 @@ async def example_decision_router():
             # Critical decisions need consensus
             if decision_type in ["resource_allocation", "model_update", "security_policy"]:
                 request = ConsensusRequest(
-                    request_id=f"{decision_type}-{datetime.utcnow().timestamp()}",
+                    request_id=f"{decision_type}-{datetime.now(timezone.utc).timestamp()}",
                     decision_type=DecisionType.OPERATIONAL,
                     proposal=payload,
                     timeout=timedelta(seconds=5)

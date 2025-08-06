@@ -52,6 +52,34 @@ class ObserverAgent:
         
         # Initialize OpenTelemetry tracer
         self.tracer = trace.get_tracer(__name__)
+    
+    async def analyze(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze data and return observation results."""
+        # Simple observation logic for testing
+        observation = {
+            "agent_id": self.agent_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "data_shape": str(data.get('data', {}).shape) if hasattr(data.get('data'), 'shape') else "unknown",
+            "tda_anomaly": data.get('tda_results', {}).get('anomaly_score', 0) > 0.5,
+            "observation": "Data observed and analyzed",
+            "metrics": {
+                "processing_time": 0.1,
+                "confidence": 0.95
+            }
+        }
+        return observation
+    
+    async def initialize(self) -> None:
+        """Initialize the agent."""
+        logger.info(f"Initializing ObserverAgent: {self.agent_id}")
+        # Any initialization logic here
+        self._initialized = True
+    
+    async def shutdown(self) -> None:
+        """Shutdown the agent."""
+        logger.info(f"Shutting down ObserverAgent: {self.agent_id}")
+        # Any cleanup logic here
+        self._initialized = False
         
         # Performance metrics
         self.metrics = {

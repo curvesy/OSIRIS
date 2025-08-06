@@ -90,6 +90,22 @@ class Supervisor:
         self.tool_names = tools
         self.system_prompt = SUPERVISOR_SYSTEM_PROMPT
     
+    async def analyze(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze data and return results - wrapper for compatibility."""
+        # Create a simple state for analysis
+        state = {"evidence_log": [data]}
+        # Use a mock KG manager
+        class MockKGManager:
+            async def get_historical_context(self, evidence, top_k=3):
+                return []
+        
+        result = await self.invoke(state, MockKGManager())
+        return {
+            "analysis": "completed",
+            "next_action": result.get("next", "FINISH"),
+            "reasoning": result.get("reasoning", "")
+        }
+    
     async def invoke(self, state: CollectiveState, kg_manager: KnowledgeGraphManager) -> Dict[str, Any]:
         """
         The new, memory-aware invocation logic for the Supervisor.
@@ -110,8 +126,20 @@ class Supervisor:
         formatted_history = self._format_historical_context(historical_context)
         
         # 3. Format the enhanced prompt
+        # Convert numpy arrays to lists for JSON serialization
+        def convert_numpy(obj):
+            if hasattr(obj, 'tolist'):  # numpy array
+                return obj.tolist()
+            elif isinstance(obj, dict):
+                return {k: convert_numpy(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy(v) for v in obj]
+            return obj
+        
+        evidence_json = json.dumps(convert_numpy(current_evidence), indent=2)
+        
         prompt = self.system_prompt.format(
-            evidence_log=json.dumps(current_evidence, indent=2),
+            evidence_log=evidence_json,
             historical_context=formatted_history,
             tool_names=", ".join(self.tool_names)
         )
@@ -191,6 +219,10 @@ class Supervisor:
             'memory_enhanced': True,
             'timestamp': datetime.now().isoformat()
         }
+
+
+# Alias for backward compatibility
+MemoryAwareSupervisor = Supervisor
 
 
 # Factory function for easy instantiation

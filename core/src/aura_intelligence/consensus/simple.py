@@ -4,7 +4,7 @@ Simple, practical consensus for AURA - only what's actually needed.
 
 from typing import Dict, Any, Optional, Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 import hashlib
 
@@ -50,7 +50,7 @@ class SimpleConsensus:
             await self.events.send_event(f"decisions.{decision.type}", {
                 "id": decision.id,
                 "data": decision.data,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             })
             return {"status": "published", "mode": "event"}
     
@@ -114,7 +114,7 @@ class SimpleConsensus:
             "type": decision.type,
             "data": decision.data,
             "term": self.term,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
 
 

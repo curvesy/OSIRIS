@@ -6,7 +6,7 @@ Defines settings for agent behavior, enhancement levels, and collaboration.
 
 from typing import Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, validator
 
 from .base import BaseSettings, EnhancementLevel
 
@@ -100,8 +100,7 @@ class AgentSettings(BaseSettings):
         description="Maximum CPU usage percentage"
     )
     
-    @field_validator("enhancement_level")
-    @classmethod
+    @validator("enhancement_level")
     def validate_enhancement_level(cls, v: EnhancementLevel) -> EnhancementLevel:
         """Validate enhancement level based on features."""
         return v

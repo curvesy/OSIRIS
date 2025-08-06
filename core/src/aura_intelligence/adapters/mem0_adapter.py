@@ -11,7 +11,7 @@ Provides async interface to Mem0 memory management system with:
 
 from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 import json
 from enum import Enum
@@ -467,7 +467,7 @@ class Mem0Adapter:
         memory_types: Optional[List[MemoryType]] = None
     ) -> List[Memory]:
         """Get agent's recent history."""
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=hours)
         
         query = SearchQuery(

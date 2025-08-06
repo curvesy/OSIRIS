@@ -7,7 +7,7 @@ Byzantine consensus when needed.
 """
 
 from typing import Dict, Any, Optional, List, Tuple
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 import logging
 from enum import Enum
@@ -151,7 +151,7 @@ class LNNCouncilAgent(AgentBase):
                 "task_id": task.task_id,
                 "task_type": task.task_type,
                 "priority": task.priority,
-                "start_time": datetime.utcnow()
+                "start_time": datetime.now(timezone.utc)
             }
         )
         
@@ -166,7 +166,7 @@ class LNNCouncilAgent(AgentBase):
             confidence=vote_data.get("confidence", 0.0),
             reasoning=vote_data.get("reasoning", ""),
             supporting_evidence=vote_data.get("evidence", []),
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
         
         # Update metrics
@@ -327,7 +327,7 @@ class LNNCouncilAgent(AgentBase):
             confidence=vote_data["confidence"],
             reasoning=vote_data["reasoning"],
             supporting_evidence=vote_data["evidence"],
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
         
         # Emit vote event
@@ -387,7 +387,7 @@ class LNNCouncilAgent(AgentBase):
             confidence=confidence,
             reasoning="Legacy rule-based decision",
             supporting_evidence=[],
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
         
     def _assess_complexity(self, task: Dict[str, Any]) -> float:
@@ -424,7 +424,7 @@ class LNNCouncilAgent(AgentBase):
         if not deadline:
             return 0.5
             
-        time_remaining = (deadline - datetime.utcnow()).total_seconds()
+        time_remaining = (deadline - datetime.now(timezone.utc)).total_seconds()
         if time_remaining < 300:  # 5 minutes
             return 1.0
         elif time_remaining < 3600:  # 1 hour

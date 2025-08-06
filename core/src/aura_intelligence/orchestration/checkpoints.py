@@ -441,3 +441,7 @@ class WorkflowCheckpointManager:
             return self._serialize_state(item)
         else:
             return str(item)
+
+
+# Alias for backward compatibility
+CheckpointManager = WorkflowCheckpointManager

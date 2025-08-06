@@ -10,11 +10,15 @@ from .exceptions import (
     IntegrationError,
     ResourceError,
     SecurityError,
-    StateError
+    StateError,
+    TDAError,
+    AgentError,
+    OrchestrationError
 )
 from .handlers import ErrorHandler, GlobalErrorHandler
 from .recovery import RecoveryStrategy, ExponentialBackoff, LinearBackoff
-from .circuit_breaker import CircuitBreaker, CircuitState, resilient_operation
+from .circuit_breaker import CircuitBreaker, CircuitState
+# Note: resilient_operation is defined in ../errors.py, not imported here to avoid circular import
 
 __all__ = [
     # Exceptions
@@ -25,6 +29,9 @@ __all__ = [
     "ResourceError",
     "SecurityError",
     "StateError",
+    "TDAError",
+    "AgentError",
+    "OrchestrationError",
     
     # Handlers
     "ErrorHandler",
@@ -38,5 +45,5 @@ __all__ = [
     # Circuit Breaker
     "CircuitBreaker",
     "CircuitState",
-    "resilient_operation",
+
 ]

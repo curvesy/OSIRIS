@@ -4,7 +4,7 @@ Type-safe configuration with Pydantic v2.
 """
 
 from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field, ConfigDict, field_validator
+from pydantic import Field, validator
 from datetime import timedelta
 from pathlib import Path
 import os
@@ -13,14 +13,6 @@ import os
 class ConfigSection(BaseModel):
     """Base class for configuration sections."""
     
-    model_config = ConfigDict(
-        extra='forbid',  # Strict validation
-        validate_assignment=True,
-        use_enum_values=True,
-        json_schema_extra={
-            "description": "Base configuration section"
-        }
-    )
 
 
 class LoggingConfig(ConfigSection):
@@ -236,8 +228,7 @@ class AuraConfig(ConfigSection):
         description="Feature flags"
     )
     
-    @field_validator('environment')
-    @classmethod
+    @validator('environment')
     def validate_environment(cls, v: str) -> str:
         """Validate and normalize environment."""
         return v.lower()

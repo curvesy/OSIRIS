@@ -11,7 +11,7 @@ import time
 from abc import abstractmethod
 
 from aura_common.logging import get_logger
-from aura_common.errors import resilient_operation
+from aura_common import resilient_operation
 from aura_common.config import is_feature_enabled
 
 logger = get_logger(__name__)

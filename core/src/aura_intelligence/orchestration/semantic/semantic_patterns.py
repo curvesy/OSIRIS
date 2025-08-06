@@ -20,7 +20,7 @@ TDA Integration:
 from typing import Dict, Any, List, Optional, Tuple
 import asyncio
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from .base_interfaces import (
     TDAContext, SemanticAnalysis, OrchestrationStrategy, 
@@ -144,7 +144,7 @@ class SemanticPatternMatcher:
             # Check if deadline is soon
             try:
                 deadline = datetime.fromisoformat(input_data["deadline"])
-                time_to_deadline = deadline - datetime.utcnow()
+                time_to_deadline = deadline - datetime.now(timezone.utc)
                 if time_to_deadline < timedelta(hours=1):
                     base_urgency = "critical"
                 elif time_to_deadline < timedelta(hours=6):

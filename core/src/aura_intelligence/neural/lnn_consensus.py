@@ -17,7 +17,7 @@ import torch.nn as nn
 from typing import Dict, Any, List, Optional, Tuple, Union
 from dataclasses import dataclass
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import numpy as np
 import structlog
 from opentelemetry import trace
@@ -132,7 +132,7 @@ class DistributedLNN:
                 "metadata": local_decision.metadata
             },
             proposer=self.node_id,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
         
         # Submit to consensus
@@ -174,7 +174,7 @@ class DistributedLNN:
         decision_id: str
     ) -> LNNDecision:
         """Perform local LNN inference."""
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         # Run inference
         with torch.no_grad():
@@ -188,7 +188,7 @@ class DistributedLNN:
         else:
             confidence = torch.sigmoid(output).mean().item()
         
-        inference_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+        inference_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
         
         # Get LNN metrics
         if hasattr(self.lnn, 'get_metrics'):
@@ -202,7 +202,7 @@ class DistributedLNN:
             confidence=float(confidence),
             inference_time_ms=inference_time,
             adaptation_count=metrics.get('adaptation_count', 0),
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             metadata=metrics
         )
         
@@ -657,7 +657,7 @@ async def run_distributed_lnn_inference(
     input_data: torch.Tensor
 ) -> torch.Tensor:
     """Run a distributed inference example."""
-    decision_id = f"decision-{datetime.utcnow().timestamp()}"
+    decision_id = f"decision-{datetime.now(timezone.utc).timestamp()}"
     
     output, metadata = await orchestrator.distributed_inference(
         input_data,

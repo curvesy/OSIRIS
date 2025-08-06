@@ -4,7 +4,7 @@ Test compression implementation for persistence diagrams
 """
 
 import numpy as np
-import zstd
+import zstandard as zstd
 import json
 import time
 from redis_store import COMPRESSION_LEVEL, COMPRESSION_THRESHOLD

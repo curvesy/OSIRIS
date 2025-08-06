@@ -14,7 +14,7 @@ import json
 import time
 import logging
 import threading
-import zstd  # Add zstd for compression
+import zstandard as zstd  # Add zstd for compression
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from contextlib import contextmanager
@@ -434,6 +434,66 @@ class RedisVectorStore(MemoryStorage):
                 "error": str(e),
                 "circuit_breaker": self.breaker.current_state
             }
+    
+    def get(self, memory_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieve a specific memory by ID."""
+        try:
+            key = f"{KEY_PREFIX}{memory_id}"
+            data = self.redis.hgetall(key)
+            
+            if not data:
+                return None
+            
+            # Parse the stored data
+            memory_data = {
+                "id": memory_id,
+                "content": json.loads(data[b"content"]),
+                "context_type": data[b"context_type"].decode(),
+                "metadata": json.loads(data[b"metadata"]) if b"metadata" in data else {},
+                "created_at": int(data[b"created_at"]) if b"created_at" in data else None
+            }
+            
+            # Decompress persistence diagram if needed
+            metadata = memory_data["metadata"]
+            if "persistence_diagram_compressed" in metadata:
+                try:
+                    compressed_hex = metadata["persistence_diagram_compressed"]
+                    compressed_bytes = bytes.fromhex(compressed_hex)
+                    decompressed = zstd.decompress(compressed_bytes)
+                    
+                    shape = tuple(metadata["persistence_diagram_shape"])
+                    dtype = np.dtype(metadata["persistence_diagram_dtype"])
+                    diagram_array = np.frombuffer(decompressed, dtype=dtype).reshape(shape)
+                    
+                    metadata["persistence_diagram"] = diagram_array.tolist()
+                    del metadata["persistence_diagram_compressed"]
+                    del metadata["persistence_diagram_shape"]
+                    del metadata["persistence_diagram_dtype"]
+                except Exception as e:
+                    logger.warning(f"Failed to decompress diagram: {e}")
+            
+            return memory_data
+            
+        except Exception as e:
+            logger.error(f"Failed to get memory {memory_id}: {e}")
+            return None
+    
+    def delete(self, memory_id: str) -> bool:
+        """Delete a memory."""
+        try:
+            key = f"{KEY_PREFIX}{memory_id}"
+            result = self.redis.delete(key)
+            
+            if result > 0:
+                logger.debug(f"Deleted memory {memory_id}")
+                return True
+            else:
+                logger.debug(f"Memory {memory_id} not found")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Failed to delete memory {memory_id}: {e}")
+            return False
     
     def close(self):
         """Clean up resources."""
